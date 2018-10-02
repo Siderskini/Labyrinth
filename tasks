@@ -1,0 +1,10 @@
+The purpose of this document is to keep a bucket list of things that I want to do to make the app less buggy and more fun to play
+
+- Keypress handling
+	- Need to treat all keypresses as keyholds for more fluid movement
+	- Currently, when a directional key is held, an initial keypress is registered and 	  then after a delay, this changes to a keyhold event. I want to bypass the delay.
+
+- There's a bug where the server crashes when the player moves near the upper and lower borders
+	- Evidence suggests that the server tries to access grid data that doesn't exist
+	- The error happens sometimes, but not every time, and the error existed even		  before randomness was introduced
+
