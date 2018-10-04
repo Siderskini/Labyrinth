@@ -12,14 +12,14 @@ var server = app.listen(4000, function(){               //Sets up a server conne
 app.use(express.static('public'));      //Uses files in folder public as static files through express (?)
 
 //Grid variables
-var TILE_S = 32,
-    COLS = 32,
-    ROWS = 32;
+var TILE_S = 48,
+    COLS = 48,
+    ROWS = 48;
 
 //The grid itself
 var grid = new Array(COLS);
 for (i = 0; i < COLS; i++) {
-    grid[i] = new Array(ROWS); 
+    grid[i] = new Array(ROWS);
     for (j = 0; j < ROWS; j++) {
         grid[i][j] = [true, true, true, true];
     }
@@ -166,7 +166,7 @@ io.on('connection', function(socket){               //When a connection is made,
     console.log('socket connected!', socket.id)     //Logs this message to console, along with the socket id of the connection
     map.set(socket.id, [TILE_S, TILE_S, (map.size % 4) + 1]);
     //console.log(map);
-    io.emit('begin', {locations: mapToArray(map), grid: grid});
+    io.emit('begin', {locations: mapToArray(map), grid: grid, playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1]});
 
     socket.on('W', function(){                      //When socket gets a W event from a client...
         if (!getTile(map.get(socket.id))[1]) {
@@ -175,7 +175,7 @@ io.on('connection', function(socket){               //When a connection is made,
                 updateTile(map.get(socket.id));
             }
         }
-        io.emit('locations', {locations: mapToArray(map), grid: grid});                      //It emits a chat event to every client with the data
+        io.emit('locations', {locations: mapToArray(map), grid: grid, playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1]});                      //It emits a chat event to every client with the data
     });
 
     socket.on('A', function(){                      //When socket gets a W event from a client...
@@ -185,7 +185,7 @@ io.on('connection', function(socket){               //When a connection is made,
                 updateTile(map.get(socket.id));
             }
         }
-        io.emit('locations', {locations: mapToArray(map), grid: grid});                      //It emits a chat event to every client with the data
+        io.emit('locations', {locations: mapToArray(map), grid: grid, playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1]});                      //It emits a chat event to every client with the data
     });
 
     socket.on('S', function(){                      //When socket gets a W event from a client...
@@ -195,7 +195,7 @@ io.on('connection', function(socket){               //When a connection is made,
                 updateTile(map.get(socket.id));
             }
         }
-        io.emit('locations', {locations: mapToArray(map), grid: grid});                      //It emits a chat event to every client with the data
+        io.emit('locations', {locations: mapToArray(map), grid: grid, playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1]});                      //It emits a chat event to every client with the data
     });
 
     socket.on('D', function(){                      //When socket gets a W event from a client...
@@ -205,7 +205,7 @@ io.on('connection', function(socket){               //When a connection is made,
                 updateTile(map.get(socket.id));
             }
         }
-        io.emit('locations', {locations: mapToArray(map), grid: grid});                      //It emits a chat event to every client with the data
+        io.emit('locations', {locations: mapToArray(map), grid: grid, playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1]});                      //It emits a chat event to every client with the data
     });
 
     socket.on('disconnect', function(){

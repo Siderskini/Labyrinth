@@ -4,7 +4,42 @@ The purpose of this document is to keep a bucket list of things that I want to d
 	- Need to treat all keypresses as keyholds for more fluid movement
 	- Currently, when a directional key is held, an initial keypress is registered and 	  then after a delay, this changes to a keyhold event. I want to bypass the delay.
 
-- There's a bug where the server crashes when the player moves near the upper and lower borders
-	- Evidence suggests that the server tries to access grid data that doesn't exist
-	- The error happens sometimes, but not every time, and the error existed even		  before randomness was introduced
-
+- When rendering, I want the screen to center on player when the player is more than half a window away from a border
+	- When (playerx > window.innerWidth/2) or (playerx < maze_width -
+	  window.innerWidth/2) I want to render from (playerx - window.innerWidth/2)
+	  to (playerx + window.innerWidth/2)
+	- When (playery > window.innerHeight/2) or (playery < maze_height -
+	  window.innerHeight/2) I want to render from (playery - window.innerHeight/2)
+	  to (playery + window.innerHeight/2)
+	- Cases:
+		- 1 Player is close to left and upper
+		- 2 Player is close to left and lower
+		- 3 Player is close to left and no vertical border
+		- 4 Player is close to right and upper
+		- 5 Player is close to right and lower
+		- 6 Player is close to right and no vertical border
+		- 7 Player is close to no horizontal border and upper
+		- 8 Player is close to no horizontal border and lower
+		- 9 Player is close to no border
+	- Conditionals:
+		if (playerx < canvas.width/2) {
+			if (playery < canvas.height/2) {1}
+			elif (playery > maze_h - canvas.height/2) {2}
+			else {3}		
+		} 
+		elif (playerx > maze_w - canvas.width/2) {
+			if (playery < canvas.height/2) {4}
+			elif (playery > maze_h - canvas.height/2) {5}
+			else {6}
+		}
+		else {
+			if (playery < canvas.height/2) {7}
+			elif (playery > maze_h - canvas.height/2) {8}
+			else {9}
+		}
+	- Player rendering:
+		- 1: 
+	- The map now moves as it is supposed to, but the player doesn't remain centered 	  when the player is supposed to remain centered
+		- One way to fix this is to accommodate for the shift in
+		  socket.on(locations)
+		
