@@ -35,7 +35,6 @@ function mapToArray(map) {
 }
 
 function updateTile(player) {
-    //console.log(player);
     if (isDeadEnd(player)) {
         var playerx = player[0]/TILE_S;
         var playery = player[1]/TILE_S;
@@ -68,7 +67,6 @@ function closeWall(playerx, playery, wall){
 
 function openWall(playerx, playery, wall){
     grid[playerx][playery][wall] = false;
-    console.log(playerx, playery);
     switch (wall) {
         case 0:
             grid[playerx - 1][playery][2] = false;
@@ -149,7 +147,6 @@ function unvisitedNeighbors(playerx, playery, visited) {
 }
 
 createMaze(grid, ROWS/2, COLS/2);
-//console.log(grid);
 
 //Socket setup
 var io = socket(server);                //Sets up an io variable by calling socket on the server (?)
@@ -170,7 +167,6 @@ io.on('connection', function(socket){               //When a connection is made,
                 updateTile(map.get(socket.id));
             }
         }
-        /*TODO: use for loop and io.to(`${socketId}`).emit('coords', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1]}) */
         io.to(socket.id).emit('coords', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1]});
         io.emit('locations', {locations: mapToArray(map), grid: grid});//, playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1]});                      //It emits a chat event to every client with the data
     });
