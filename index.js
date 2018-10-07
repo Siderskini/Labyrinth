@@ -148,6 +148,96 @@ function unvisitedNeighbors(playerx, playery, visited) {
 
 createMaze(grid, ROWS/2, COLS/2);
 
+//////////////////////////////////////////////
+//##########################################//
+//#Everything between here and socket setup#//
+//#will be related to stuff that makes the #//
+//#game aspect of the game lol.            #//
+//##########################################//
+//////////////////////////////////////////////
+
+/* The beginning of items
+	Item grid holds items, aka collectibles for benefits
+	Items can be food, keys, or anything else that is collected by running around the grid
+ */
+//Food grid is a grid used for storing food
+var foodGrid = new Array(COLS);
+for (i = 0; i < COLS; i++) {
+    foodGrid[i] = new Array(ROWS);
+    for (j = 0; j < ROWS; j++) {
+        foodGrid[i][j] = true;
+    }
+}
+
+//This function has rules for what happens when food is eaten
+function eatFood(x, y, id) {
+	if (foodGrid[x][y]) {
+		foodGrid[x][y] = false;
+		map.set(id, [map.get(id)[0], map.get(id)[1], map.get(id)[2], map.get(id)[3] + 1]); //Increase score by 1 for eating a food
+	}
+}
+/* The end of items */
+
+
+/* The beginning of maze modification 
+	Maze modifiers are items that modify the maze
+	These can be traps, tools to help other players, etc.	
+*/
+var itemGrid = new Array(COLS);
+for (i = 0; i < COLS; i++) {
+    itemGrid[i] = new Array(ROWS);
+    for (j = 0; j < ROWS; j++) {
+        itemGrid[i][j] = [];
+    }
+}
+
+/*
+function placeItem(x, y, id) {
+	itemGrid[i][j].push();
+}
+*/
+
+/* The end of maze modification */
+
+
+/* The beginning of enemies
+	I want one main enemy to be the minotaur, which represents a kind of "final boss"
+	Current enemy types:
+		- mob:
+		  Mobs are the regular piece of shit monsters that love to give everyone trouble without regard for their own life.
+		  They are usually weak and stupid and use randomwalk to go places.
+		- smartys:
+		  Smartys are the more intelligent mobs that strategize to end players' lives.
+		  They might use heuristics and algorithms to find players.
+		- bosses:
+		  Bosses, such as the feared minotaur are smartys but they also must have unique powers that make them hard to defeat.
+		  Since this is meant to be a collaborative game, bosses must be IMPOSSIBLE for players to kill, or maybe just impossible to kill. 
+		  To lure some of the better players in, it's important for the boss to maintain the illusion of being killable by one person/ a 
+		  few people.
+		  I really want the death of the boss to be a cooperative effort, and not just a small-scale cooperative effort, but one
+		  that occurs on a large scale. 
+		  I want the boss to only be defeatable through capture or other means, to discourage the idea of necessary killing.
+*/
+var enemies = [];
+
+//Add some enemies to our list
+//Add mobs
+for (i = 4; i < ROWS - 4; i++) {
+	enemies.push(['mob', i, i]);
+}
+//Add smartys
+for (i = 8; i < COLS; i += 8) {
+	for (j = 8; j < ROWS; j += 8) {
+		enemies.push('smarty', i, j);
+	}
+}
+//Add bosses
+enemies.push(['boss', COLS / 2, ROWS / 2]);
+
+
+/* The end of enemies */
+
+
 //Socket setup
 var io = socket(server);                //Sets up an io variable by calling socket on the server (?)
 
@@ -155,53 +245,57 @@ var map = new Map();
 
 io.on('connection', function(socket){               //When a connection is made, calls the function which...
     console.log('socket connected!', socket.id)     //Logs this message to console, along with the socket id of the connection
-    map.set(socket.id, [TILE_S, TILE_S, (map.size % 4) + 1]);
+    map.set(socket.id, [TILE_S, TILE_S, (map.size % 4) + 1, 0]);
     //console.log(map);
     io.to(socket.id).emit('coords', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1]});
-    io.emit('begin', {locations: mapToArray(map), grid: grid});//, playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1]});
+    io.emit('begin', {locations: mapToArray(map), grid: grid, food: foodGrid});
 
     socket.on('W', function(){                      //When socket gets a W event from a client...
         if (!getTile(map.get(socket.id))[1]) {
             if (map.get(socket.id)[1] > 0) {
-                map.set(socket.id, [map.get(socket.id)[0], map.get(socket.id)[1] - TILE_S, map.get(socket.id)[2]]);
+                map.set(socket.id, [map.get(socket.id)[0], map.get(socket.id)[1] - TILE_S, map.get(socket.id)[2], map.get(socket.id)[3]]);
                 updateTile(map.get(socket.id));
+                eatFood(map.get(socket.id)[0] / TILE_S, map.get(socket.id)[1] / TILE_S, socket.id);
             }
         }
         io.to(socket.id).emit('coords', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1]});
-        io.emit('locations', {locations: mapToArray(map), grid: grid});//, playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1]});                      //It emits a chat event to every client with the data
+        io.emit('gameState', {locations: mapToArray(map), grid: grid, food: foodGrid});                //It emits a chat event to every client with the data
     });
 
     socket.on('A', function(){                      //When socket gets a W event from a client...
         if (!getTile(map.get(socket.id))[0]) {
             if (map.get(socket.id)[0] > 0) {
-                map.set(socket.id, [map.get(socket.id)[0] - TILE_S, map.get(socket.id)[1], map.get(socket.id)[2]]);
+                map.set(socket.id, [map.get(socket.id)[0] - TILE_S, map.get(socket.id)[1], map.get(socket.id)[2], map.get(socket.id)[3]]);
                 updateTile(map.get(socket.id));
+                eatFood(map.get(socket.id)[0] / TILE_S, map.get(socket.id)[1] / TILE_S, socket.id);
             }
         }
         io.to(socket.id).emit('coords', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1]});
-        io.emit('locations', {locations: mapToArray(map), grid: grid});//, playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1]});                      //It emits a chat event to every client with the data
+        io.emit('gameState', {locations: mapToArray(map), grid: grid, food: foodGrid});          //It emits a chat event to every client with the data
     });
 
     socket.on('S', function(){                      //When socket gets a W event from a client...
         if (!getTile(map.get(socket.id))[3]) {
             if (map.get(socket.id)[1] < TILE_S * (ROWS - 1)) {
-                map.set(socket.id, [map.get(socket.id)[0], map.get(socket.id)[1] + TILE_S, map.get(socket.id)[2]]);
+                map.set(socket.id, [map.get(socket.id)[0], map.get(socket.id)[1] + TILE_S, map.get(socket.id)[2], map.get(socket.id)[3]]);
                 updateTile(map.get(socket.id));
+                eatFood(map.get(socket.id)[0] / TILE_S, map.get(socket.id)[1] / TILE_S, socket.id);
             }
         }
         io.to(socket.id).emit('coords', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1]});
-        io.emit('locations', {locations: mapToArray(map), grid: grid});//, playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1]});                      //It emits a chat event to every client with the data
+        io.emit('gameState', {locations: mapToArray(map), grid: grid, food: foodGrid});          //It emits a chat event to every client with the data
     });
 
     socket.on('D', function(){                      //When socket gets a W event from a client...
         if (!getTile(map.get(socket.id))[2]) {
             if (map.get(socket.id)[0] < TILE_S * (COLS - 1)) {
-                map.set(socket.id, [map.get(socket.id)[0] + TILE_S, map.get(socket.id)[1], map.get(socket.id)[2]]);
+                map.set(socket.id, [map.get(socket.id)[0] + TILE_S, map.get(socket.id)[1], map.get(socket.id)[2], map.get(socket.id)[3]]);
                 updateTile(map.get(socket.id));
+                eatFood(map.get(socket.id)[0] / TILE_S, map.get(socket.id)[1] / TILE_S, socket.id);
             }
         }
         io.to(socket.id).emit('coords', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1]});
-        io.emit('locations', {locations: mapToArray(map), grid: grid});//, playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1]});                      //It emits a chat event to every client with the data
+        io.emit('gameState', {locations: mapToArray(map), grid: grid, food: foodGrid})           //It emits a chat event to every client with the data
     });
 
     socket.on('disconnect', function(){

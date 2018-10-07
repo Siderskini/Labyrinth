@@ -69,14 +69,35 @@ function keyUpHandler(event) {
     }
 }
 
+//////////////////////////////////////////////
+//##########################################//
+//#Everything between here and socket setup#//
+//#will be related to stuff that makes the #//
+//#game aspect of the game lol.            #//
+//##########################################//
+//////////////////////////////////////////////
+
+/* Food */
+var foodGrid;
+
+function drawFood(i, j, canvasi, canvasj) {
+    ctx.fillStyle = 'rgb(105, 105, 105)';
+    if (foodGrid[i][j]) {
+        ctx.fillRect(canvasi * TILE_S + (7 * TILE_S / 16), canvasj * TILE_S + (7 * TILE_S / 16), TILE_S / 8, TILE_S / 8);
+    }
+}
+/* End of food */
+
+
+
 socket.on('coords', function(data) {
-    console.log('received');
     playerx = data.playerx;
     playery = data.playery;
 });
 
-socket.on('locations', function(data) {
+socket.on('gameState', function(data) {
     grid = data.grid;
+    foodGrid = data.food;
     for (var i = 0; i < blankPlayerGrid.length; i++) {
         playerGrid[i] = blankPlayerGrid[i].slice();
     }
@@ -87,6 +108,7 @@ socket.on('locations', function(data) {
 
 socket.on('begin', function(data) {
     grid = data.grid;
+    foodGrid = data.food;
     for (var i = 0; i < blankPlayerGrid.length; i++) {
         playerGrid[i] = blankPlayerGrid[i].slice();
     }
@@ -164,6 +186,7 @@ function drawAll() {
             drawMaze (playerx - canvas.width/2, playerx + canvas.width/2, playery - canvas.height/2, playery + canvas.height/2);
         }
     }
+
 }
 
 //This method is a helper to make the REAL rendering less disgusting
@@ -172,6 +195,8 @@ function drawMaze (leftb, rightb, upb, downb, i, j) {
         canvasj = 0;
     for (i = Math.floor(leftb / TILE_S); i < Math.floor(rightb / TILE_S); i++) {               //These two for loops help draw the maze
         for (j = Math.floor(upb / TILE_S); j < Math.floor(downb / TILE_S); j++) {
+
+            //Draw the walls
             ctx.fillStyle = 'rgb(105, 105, 105)';
             if(grid[i][j][0]) {
                 ctx.fillRect(canvasi * TILE_S, canvasj * TILE_S, 1, TILE_S);
@@ -185,7 +210,13 @@ function drawMaze (leftb, rightb, upb, downb, i, j) {
             if(grid[i][j][3]) {
                 ctx.fillRect(canvasi * TILE_S, canvasj * TILE_S + (TILE_S - 1), TILE_S, 1);
             }
+
+            //Draw the player
             drawPlayer(i, j, canvasi, canvasj);
+
+            //Draw the food
+            drawFood(i, j, canvasi, canvasj);
+
             canvasj++;
         }
         canvasj = 0;
