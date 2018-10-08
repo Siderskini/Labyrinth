@@ -247,7 +247,7 @@ io.on('connection', function(socket){               //When a connection is made,
     console.log('socket connected!', socket.id)     //Logs this message to console, along with the socket id of the connection
     map.set(socket.id, [TILE_S, TILE_S, (map.size % 4) + 1, 0]);
     //console.log(map);
-    io.to(socket.id).emit('coords', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1]});
+    io.to(socket.id).emit('privateState', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1], score: map.get(socket.id)[3]});
     io.emit('begin', {locations: mapToArray(map), grid: grid, food: foodGrid});
 
     socket.on('W', function(){                      //When socket gets a W event from a client...
@@ -258,7 +258,7 @@ io.on('connection', function(socket){               //When a connection is made,
                 eatFood(map.get(socket.id)[0] / TILE_S, map.get(socket.id)[1] / TILE_S, socket.id);
             }
         }
-        io.to(socket.id).emit('coords', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1]});
+        io.to(socket.id).emit('privateState', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1], score: map.get(socket.id)[3]});
         io.emit('gameState', {locations: mapToArray(map), grid: grid, food: foodGrid});                //It emits a chat event to every client with the data
     });
 
@@ -270,7 +270,7 @@ io.on('connection', function(socket){               //When a connection is made,
                 eatFood(map.get(socket.id)[0] / TILE_S, map.get(socket.id)[1] / TILE_S, socket.id);
             }
         }
-        io.to(socket.id).emit('coords', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1]});
+        io.to(socket.id).emit('privateState', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1], score: map.get(socket.id)[3]});
         io.emit('gameState', {locations: mapToArray(map), grid: grid, food: foodGrid});          //It emits a chat event to every client with the data
     });
 
@@ -282,7 +282,7 @@ io.on('connection', function(socket){               //When a connection is made,
                 eatFood(map.get(socket.id)[0] / TILE_S, map.get(socket.id)[1] / TILE_S, socket.id);
             }
         }
-        io.to(socket.id).emit('coords', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1]});
+        io.to(socket.id).emit('privateState', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1], score: map.get(socket.id)[3]});
         io.emit('gameState', {locations: mapToArray(map), grid: grid, food: foodGrid});          //It emits a chat event to every client with the data
     });
 
@@ -294,7 +294,7 @@ io.on('connection', function(socket){               //When a connection is made,
                 eatFood(map.get(socket.id)[0] / TILE_S, map.get(socket.id)[1] / TILE_S, socket.id);
             }
         }
-        io.to(socket.id).emit('coords', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1]});
+        io.to(socket.id).emit('privateState', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1], score: map.get(socket.id)[3]});
         io.emit('gameState', {locations: mapToArray(map), grid: grid, food: foodGrid})           //It emits a chat event to every client with the data
     });
 

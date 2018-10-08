@@ -21,7 +21,8 @@ var TILE_S = 48,
 
 // Player variables
 var playerx,
-    playery;
+    playery,
+    score;
 
 playerGrid = [];
 blankPlayerGrid = new Array(COLS);
@@ -90,9 +91,10 @@ function drawFood(i, j, canvasi, canvasj) {
 
 
 
-socket.on('coords', function(data) {
+socket.on('privateState', function(data) {
     playerx = data.playerx;
     playery = data.playery;
+    score = data.score;
 });
 
 socket.on('gameState', function(data) {
@@ -187,6 +189,10 @@ function drawAll() {
         }
     }
 
+    // Draw the score
+    ctx.font = "30px Arial";
+    ctx.strokeText('Score: ' + score, 10, 30);
+
 }
 
 //This method is a helper to make the REAL rendering less disgusting
@@ -260,9 +266,10 @@ function drawPlayer(i, j, canvasi, canvasj) {
             ctx.fillStyle = "yellow";
             break;
     }
-    ctx.fillRect(canvasi * TILE_S + 1, canvasj * TILE_S + 1, TILE_S - 2, TILE_S - 2);
+    ctx.fillRect(canvasi * TILE_S + 2, canvasj * TILE_S + 2, TILE_S - 4, TILE_S - 4);
 }
 
+/*
 //	Applies the draw function to the actor
 function applyDraw(actor) {
     actor.draw = function () {
@@ -286,6 +293,7 @@ function applyDraw(actor) {
         ctx.fillRect(actor.x + 1, actor.y + 1, actor.width - 2, actor.height - 2);
     };
 }
+*/
 
 //  Starting point for program
 function main() {
