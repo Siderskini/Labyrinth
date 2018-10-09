@@ -269,32 +269,6 @@ function drawPlayer(i, j, canvasi, canvasj) {
     ctx.fillRect(canvasi * TILE_S + 2, canvasj * TILE_S + 2, TILE_S - 4, TILE_S - 4);
 }
 
-/*
-//	Applies the draw function to the actor
-function applyDraw(actor) {
-    actor.draw = function () {
-        switch(actor.color) {
-            case 0:
-                ctx.fillStyle = "white";
-                break;
-            case 1:
-                ctx.fillStyle = 'rgb(255, 0, 129)';
-                break;
-            case 2:
-                ctx.fillStyle = "green";
-                break;
-            case 3:
-                ctx.fillStyle = "red";
-                break;
-            case 4:
-                ctx.fillStyle = "yellow";
-                break;
-        }
-        ctx.fillRect(actor.x + 1, actor.y + 1, actor.width - 2, actor.height - 2);
-    };
-}
-*/
-
 //  Starting point for program
 function main() {
     init();

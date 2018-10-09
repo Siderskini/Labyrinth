@@ -25,3 +25,5 @@ If I use a list to store mobs, it will have to be a list of objects, with mob ty
 If I store a list of mobs as objects, I will need a function to create a rendering grid for the client. There's the question of whether to host this function on server side or client side. If I want the items in the grid to be differentiable from each other, then either
 a) the server side creates the enemy render grid and passes it over to the client side with enemy ids
 b) the server sends the list over to the client side and the client side just renders based on the map
+
+- Want to add time based events

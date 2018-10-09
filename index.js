@@ -174,6 +174,9 @@ function eatFood(x, y, id) {
 	if (foodGrid[x][y]) {
 		foodGrid[x][y] = false;
 		map.set(id, [map.get(id)[0], map.get(id)[1], map.get(id)[2], map.get(id)[3] + 1]); //Increase score by 1 for eating a food
+		setTimeout(function(){
+			foodGrid[x][y] = true;
+		},5000);
 	}
 }
 /* The end of items */
@@ -246,6 +249,7 @@ var map = new Map();
 io.on('connection', function(socket){               //When a connection is made, calls the function which...
     console.log('socket connected!', socket.id)     //Logs this message to console, along with the socket id of the connection
     map.set(socket.id, [TILE_S, TILE_S, (map.size % 4) + 1, 0]);
+    eatFood(map.get(socket.id)[0] / TILE_S, map.get(socket.id)[1] / TILE_S, socket.id);
     //console.log(map);
     io.to(socket.id).emit('privateState', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1], score: map.get(socket.id)[3]});
     io.emit('begin', {locations: mapToArray(map), grid: grid, food: foodGrid});
