@@ -176,7 +176,7 @@ function eatFood(x, y, id) {
 		map.set(id, [map.get(id)[0], map.get(id)[1], map.get(id)[2], map.get(id)[3] + 1]); //Increase score by 1 for eating a food
 		setTimeout(function(){
 			foodGrid[x][y] = true;
-		},5000);
+		},60000);
 	}
 }
 /* The end of items */
@@ -238,6 +238,7 @@ for (i = 4; i < COLS; i += 4) {
 }
 
 //Add smartys
+//enemies.push(['smarty', 8, 8]);
 /*
 for (i = 8; i < COLS; i += 8) {
 	for (j = 8; j < ROWS; j += 8) {
@@ -255,10 +256,16 @@ function moveEnemies() {
 			case 'mob':
 				var moves = realMoves(getTile([enemy[1] * TILE_S, enemy[2] * TILE_S]));
 				if (moves.length) {
-					var move = moves[Math.floor((Math.random() * moves.length))];
+					var move = moves[Math.floor((Math.random() * moves.length))];		//Mobs randomwalk
 					enemy[1] += move[0];
 					enemy[2] += move[1];
 				}
+				break;
+			case 'smarty':
+				var moves = realMoves(getTile([enemy[1] * TILE_S, enemy[2] * TILE_S]));
+				var move = getSmartMove(enemy, moves);
+				enemy[1] += move[0];
+				enemy[2] += move[1];
 				break;
 		}
 	}
@@ -287,12 +294,46 @@ function realMoves(tile) {
 	return moves;
 }
 
+//Gets a smart move for smartys
+function getSmartMove(enemy, moves) {
+	closest = [ROWS * 2, COLS * 2];
+	dist = distanceToPlayer(enemy, closest);
+	for (let [id, player] of map) {
+		if (distanceToPlayer(enemy, player) < dist) {
+			dist = distanceToPlayer(enemy, player);
+			closest = [player[0], player[1]];
+		}
+	}
+	var vector = [enemy[1] - closest[0], enemy[2] - closest[1]];
+	bestMove = moves[0];
+	bestDist = distanceToPlayer(vector);
+	for (let move of moves) {
+		if (distance(vector, move) < bestDist) {
+			bestDist = distance(vector, move);
+			bestMove = move;
+		}
+	}
+	return move;
+}
+
+//Gets the distance from an enemy to an objective
+function distanceToPlayer(enemy, player) {
+	//console.log(player);
+	return enemy[1] - player[0] + enemy[2] - player[1];
+}
+
+//General distance
+function distance(a, b) {
+	return a[0] - b[0] + a[1] - b[1];
+}
+
 /* The end of enemies */
 
 function afterMove(id) {
 	var x = map.get(id)[0] / TILE_S,
 		y = map.get(id)[1] / TILE_S;
 	updateTile(map.get(id));
+	eatFood(x, y, id);											//Eat food if available
 }
 
 function continuous(id) {
