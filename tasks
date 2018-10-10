@@ -8,6 +8,8 @@ The purpose of this document is to keep a bucket list of things that I want to d
 	- The client side crashes if the maze is smaller than window size (large window or
 	  zoomed out)
 	- The graphics has some lag because the emit for the render locations and the emit 	  for game state are separate
+	- Rendering is currently done with 10fps based on emit events from server to
+	  client side
 
 - Meta
 	- Want to decide on some game mechanics including:
@@ -18,12 +20,6 @@ The purpose of this document is to keep a bucket list of things that I want to d
 
 
 Enemies
-	- I want there to be one final boss and various mobs
-	- I'm trying to figure out how to store the boss and the enemies in a data structure
-
-If I use a list to store mobs, it will have to be a list of objects, with mob type being an attribute
-If I store a list of mobs as objects, I will need a function to create a rendering grid for the client. There's the question of whether to host this function on server side or client side. If I want the items in the grid to be differentiable from each other, then either
-a) the server side creates the enemy render grid and passes it over to the client side with enemy ids
-b) the server sends the list over to the client side and the client side just renders based on the map
-
-- Want to add time based events
+	- There is currently a randomwalk mob called 'mob'
+	- I want to make a low level intelligence mob called 'smarty'
+	- Eventually I want to make a very intelligent mob called 'boss'

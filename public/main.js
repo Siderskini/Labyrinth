@@ -82,14 +82,24 @@ function keyUpHandler(event) {
 var foodGrid;
 
 function drawFood(i, j, canvasi, canvasj) {
-    ctx.fillStyle = 'rgb(105, 105, 105)';
     if (foodGrid[i][j]) {
+        ctx.fillStyle = 'rgb(105, 105, 105)';
         ctx.fillRect(canvasi * TILE_S + (7 * TILE_S / 16), canvasj * TILE_S + (7 * TILE_S / 16), TILE_S / 8, TILE_S / 8);
     }
 }
 /* End of food */
 
+/* Enemies */
+var enemyGrid = [];
 
+function drawEnemy(i, j, canvasi, canvasj) {
+    if (enemyGrid[i][j]) {
+        ctx.fillStyle = 'rgb(255, 0, 0)';
+        ctx.fillRect(canvasi * TILE_S + (3 * TILE_S / 8), canvasj * TILE_S + (3 * TILE_S / 8), TILE_S / 4, TILE_S / 4);
+    }
+}
+
+/* End of enemies */
 
 socket.on('privateState', function(data) {
     playerx = data.playerx;
@@ -106,6 +116,12 @@ socket.on('gameState', function(data) {
 	for (let value of data.locations) {
         playerGrid[value[0]/TILE_S][value[1]/TILE_S] = value[2];
 	}
+    for (var i = 0; i < blankPlayerGrid.length; i++) {
+        enemyGrid[i] = blankPlayerGrid[i].slice();
+    }
+    for (let enemy of data.enemies) {
+        enemyGrid[enemy[1]][enemy[2]] = 1;
+    }
 });
 
 socket.on('begin', function(data) {
@@ -116,6 +132,12 @@ socket.on('begin', function(data) {
     }
     for (let value of data.locations) {
         playerGrid[value[0]/TILE_S][value[1]/TILE_S] = value[2];
+    }
+    for (var i = 0; i < blankPlayerGrid.length; i++) {
+        enemyGrid[i] = blankPlayerGrid[i].slice();
+    }
+    for (let enemy of data.enemies) {
+        enemyGrid[enemy[1]][enemy[2]] = 1;
     }
 	main();
 });
@@ -217,11 +239,14 @@ function drawMaze (leftb, rightb, upb, downb, i, j) {
                 ctx.fillRect(canvasi * TILE_S, canvasj * TILE_S + (TILE_S - 1), TILE_S, 1);
             }
 
-            //Draw the player
-            drawPlayer(i, j, canvasi, canvasj);
-
             //Draw the food
             drawFood(i, j, canvasi, canvasj);
+
+            //Draw the enemies
+            drawEnemy(i, j, canvasi, canvasj);
+
+            //Draw the player
+            drawPlayer(i, j, canvasi, canvasj);
 
             canvasj++;
         }
@@ -249,24 +274,23 @@ function drawMazeTile (i, j, canvasi, canvasj) {
 
 //Player drawing for REAL rendering
 function drawPlayer(i, j, canvasi, canvasj) {
-    switch(playerGrid[i][j]) {
-        case 0:
-            ctx.fillStyle = "white";
-            break;
-        case 1:
-            ctx.fillStyle = 'rgb(255, 0, 129)';
-            break;
-        case 2:
-            ctx.fillStyle = "green";
-            break;
-        case 3:
-            ctx.fillStyle = "red";
-            break;
-        case 4:
-            ctx.fillStyle = "yellow";
-            break;
+    if (playerGrid[i][j]) {
+        switch(playerGrid[i][j]) {
+            case 1:
+                ctx.fillStyle = 'rgb(255, 0, 129)';
+                break;
+            case 2:
+                ctx.fillStyle = "green";
+                break;
+            case 3:
+                ctx.fillStyle = "red";
+                break;
+            case 4:
+                ctx.fillStyle = "yellow";
+                break;
+        }
+        ctx.fillRect(canvasi * TILE_S + 2, canvasj * TILE_S + 2, TILE_S - 4, TILE_S - 4);
     }
-    ctx.fillRect(canvasi * TILE_S + 2, canvasj * TILE_S + 2, TILE_S - 4, TILE_S - 4);
 }
 
 //  Starting point for program

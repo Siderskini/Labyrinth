@@ -225,21 +225,86 @@ var enemies = [];
 
 //Add some enemies to our list
 //Add mobs
+/*
 for (i = 4; i < ROWS - 4; i++) {
 	enemies.push(['mob', i, i]);
 }
-//Add smartys
-for (i = 8; i < COLS; i += 8) {
-	for (j = 8; j < ROWS; j += 8) {
-		enemies.push('smarty', i, j);
+*/
+
+for (i = 4; i < COLS; i += 4) {
+	for (j = 4; j < ROWS; j += 4) {
+		enemies.push(['mob', i, j]);
 	}
 }
-//Add bosses
-enemies.push(['boss', COLS / 2, ROWS / 2]);
 
+//Add smartys
+/*
+for (i = 8; i < COLS; i += 8) {
+	for (j = 8; j < ROWS; j += 8) {
+		enemies.push(['smarty', i, j]);
+	}
+}
+*/
+
+//Add bosses
+//enemies.push(['boss', COLS / 2, ROWS / 2]);
+
+function moveEnemies() {
+	for (let enemy of enemies) {
+		switch (enemy[0]) {
+			case 'mob':
+				var moves = realMoves(getTile([enemy[1] * TILE_S, enemy[2] * TILE_S]));
+				if (moves.length) {
+					var move = moves[Math.floor((Math.random() * moves.length))];
+					enemy[1] += move[0];
+					enemy[2] += move[1];
+				}
+				break;
+		}
+	}
+}
+
+//Moves the enemies on a timer
+setInterval(function(){
+	moveEnemies();
+},1000);
+
+//Gets possible moves for an enemy
+function realMoves(tile) {
+	moves = [];
+	if (!tile[0]) {
+		moves.push([-1, 0]);
+	}
+	if (!tile[1]) {
+		moves.push([0, -1]);
+	}
+	if (!tile[2]) {
+		moves.push([1, 0]);
+	}
+	if (!tile[3]) {
+		moves.push([0, 1]);
+	}
+	return moves;
+}
 
 /* The end of enemies */
 
+function afterMove(id) {
+	var x = map.get(id)[0] / TILE_S,
+		y = map.get(id)[1] / TILE_S;
+	updateTile(map.get(id));
+}
+
+function continuous(id) {
+	var x = map.get(id)[0] / TILE_S,
+		y = map.get(id)[1] / TILE_S;
+	eatFood(x, y, id);											//Eat food if available
+	for (let enemy of enemies) {								//Die if touching enemy
+		if ((enemy[1] == x) && (enemy[2] == y)) {
+			map.set(id, [TILE_S, TILE_S, map.get(id)[2], 0]);
+		}
+	}
+}
 
 //Socket setup
 var io = socket(server);                //Sets up an io variable by calling socket on the server (?)
@@ -249,57 +314,53 @@ var map = new Map();
 io.on('connection', function(socket){               //When a connection is made, calls the function which...
     console.log('socket connected!', socket.id)     //Logs this message to console, along with the socket id of the connection
     map.set(socket.id, [TILE_S, TILE_S, (map.size % 4) + 1, 0]);
-    eatFood(map.get(socket.id)[0] / TILE_S, map.get(socket.id)[1] / TILE_S, socket.id);
     //console.log(map);
     io.to(socket.id).emit('privateState', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1], score: map.get(socket.id)[3]});
-    io.emit('begin', {locations: mapToArray(map), grid: grid, food: foodGrid});
+    io.emit('begin', {locations: mapToArray(map), grid: grid, food: foodGrid, enemies: enemies});
+
+    //Handles continuous events, including emitting gameState to client
+    setInterval(function(){
+    	if (map.get(socket.id)) {
+    		io.to(socket.id).emit('privateState', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1], score: map.get(socket.id)[3]});
+    		io.emit('gameState', {locations: mapToArray(map), grid: grid, food: foodGrid, enemies: enemies});
+    	}
+    	continuous(socket.id);
+	},100);
 
     socket.on('W', function(){                      //When socket gets a W event from a client...
         if (!getTile(map.get(socket.id))[1]) {
             if (map.get(socket.id)[1] > 0) {
                 map.set(socket.id, [map.get(socket.id)[0], map.get(socket.id)[1] - TILE_S, map.get(socket.id)[2], map.get(socket.id)[3]]);
-                updateTile(map.get(socket.id));
-                eatFood(map.get(socket.id)[0] / TILE_S, map.get(socket.id)[1] / TILE_S, socket.id);
+                afterMove(socket.id);
             }
         }
-        io.to(socket.id).emit('privateState', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1], score: map.get(socket.id)[3]});
-        io.emit('gameState', {locations: mapToArray(map), grid: grid, food: foodGrid});                //It emits a chat event to every client with the data
     });
 
     socket.on('A', function(){                      //When socket gets a W event from a client...
         if (!getTile(map.get(socket.id))[0]) {
             if (map.get(socket.id)[0] > 0) {
                 map.set(socket.id, [map.get(socket.id)[0] - TILE_S, map.get(socket.id)[1], map.get(socket.id)[2], map.get(socket.id)[3]]);
-                updateTile(map.get(socket.id));
-                eatFood(map.get(socket.id)[0] / TILE_S, map.get(socket.id)[1] / TILE_S, socket.id);
+                afterMove(socket.id);
             }
         }
-        io.to(socket.id).emit('privateState', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1], score: map.get(socket.id)[3]});
-        io.emit('gameState', {locations: mapToArray(map), grid: grid, food: foodGrid});          //It emits a chat event to every client with the data
     });
 
     socket.on('S', function(){                      //When socket gets a W event from a client...
         if (!getTile(map.get(socket.id))[3]) {
             if (map.get(socket.id)[1] < TILE_S * (ROWS - 1)) {
                 map.set(socket.id, [map.get(socket.id)[0], map.get(socket.id)[1] + TILE_S, map.get(socket.id)[2], map.get(socket.id)[3]]);
-                updateTile(map.get(socket.id));
-                eatFood(map.get(socket.id)[0] / TILE_S, map.get(socket.id)[1] / TILE_S, socket.id);
+                afterMove(socket.id);
             }
         }
-        io.to(socket.id).emit('privateState', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1], score: map.get(socket.id)[3]});
-        io.emit('gameState', {locations: mapToArray(map), grid: grid, food: foodGrid});          //It emits a chat event to every client with the data
     });
 
     socket.on('D', function(){                      //When socket gets a W event from a client...
         if (!getTile(map.get(socket.id))[2]) {
             if (map.get(socket.id)[0] < TILE_S * (COLS - 1)) {
                 map.set(socket.id, [map.get(socket.id)[0] + TILE_S, map.get(socket.id)[1], map.get(socket.id)[2], map.get(socket.id)[3]]);
-                updateTile(map.get(socket.id));
-                eatFood(map.get(socket.id)[0] / TILE_S, map.get(socket.id)[1] / TILE_S, socket.id);
+                afterMove(socket.id);
             }
         }
-        io.to(socket.id).emit('privateState', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1], score: map.get(socket.id)[3]});
-        io.emit('gameState', {locations: mapToArray(map), grid: grid, food: foodGrid})           //It emits a chat event to every client with the data
     });
 
     socket.on('disconnect', function(){
