@@ -323,8 +323,8 @@ io.on('connection', function(socket){               //When a connection is made,
     	if (map.get(socket.id)) {
     		io.to(socket.id).emit('privateState', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1], score: map.get(socket.id)[3]});
     		io.emit('gameState', {locations: mapToArray(map), grid: grid, food: foodGrid, enemies: enemies});
+    		continuous(socket.id);
     	}
-    	continuous(socket.id);
 	},100);
 
     socket.on('W', function(){                      //When socket gets a W event from a client...
