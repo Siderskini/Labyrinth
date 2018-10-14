@@ -145,14 +145,14 @@ socket.on('begin', function(data) {
 //  Initialize the canvas and context
 canvas = document.createElement("canvas");
 ctx = canvas.getContext("2d");
-canvas.width = window.innerWidth - (window.innerWidth % TILE_S);
 canvas.height = window.innerHeight - (window.innerHeight % TILE_S);
+canvas.width = canvas.height;//window.innerWidth - (window.innerWidth % TILE_S);
 canvas.setAttribute("tabIndex", "0");
 canvas.focus();
 
 // Adding keyboard listeners to canvas
-canvas.addEventListener("keydown", keyDownHandler);
-canvas.addEventListener("keyup", keyUpHandler);
+window.addEventListener("keydown", keyDownHandler);
+window.addEventListener("keyup", keyUpHandler);
 
 //  Adding canvas to DOM
 document.body.appendChild(canvas);

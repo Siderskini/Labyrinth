@@ -25,6 +25,116 @@ for (i = 0; i < COLS; i++) {
     }
 }
 
+/* Adapted from https://www.geeksforgeeks.org/implementation-priority-queue-javascript/ */
+// User defined class 
+// to store element and its priority 
+class QElement {
+    constructor(element, priority = 0, directions = []) 
+    { 
+        this.element = element; 
+        this.priority = priority;
+        this.directions = directions;
+    } 
+}
+
+// PriorityQueue class 
+class PriorityQueue {
+  
+    // An array is used to implement priority 
+    constructor() { 
+        this.items = []; 
+    } 
+  
+    // functions to be implemented
+    // push(item, priority)
+    // enqueue function to add element
+    // to the queue as per priority
+    push(element, priority = 0, directions = []) { 
+        // creating object from queue element 
+        var qElement = new QElement(element, priority, directions); 
+        var contain = false;
+  
+        // iterating through the entire 
+        // item array to add element at the 
+        // correct location of the Queue 
+        for (var i = 0; i < this.items.length; i++) { 
+            if (this.items[i].priority > qElement.priority) { 
+                // Once the correct location is found it is 
+                // enqueued 
+                this.items.splice(i, 0, qElement); 
+                contain = true; 
+                break; 
+            } 
+        } 
+  
+        // if the element have the highest priority 
+        // it is added at the end of the queue 
+        if (!contain) { 
+            this.items.push(qElement); 
+        } 
+    }
+
+    /* If item already in priority queue with higher priority, update its priority and rebuild the heap.
+       If item already in priority queue with equal or lower priority, do nothing.
+       If item not in priority queue, do the same thing as self.push. */
+    update(element, priority, directions) {
+        var x = this.items.indexOf(element);
+        if (x == -1) {
+            this.push(element, priority, directions);
+        } else {
+            if (priority > this.items[x].priority) {
+                this.items.splice(x, 1);
+                this.push(element, priority, directions);
+            }
+        }
+    }
+
+    // dequeue method to remove 
+    // element from the queue 
+    dequeue() { 
+        // return the dequeued element 
+        // and remove it. 
+        // if the queue is empty 
+        // returns Underflow 
+        if (this.isEmpty()) 
+            return "Underflow"; 
+        return this.items.shift(); 
+    }
+
+    // front function 
+    front() { 
+        // returns the highest priority element 
+        // in the Priority queue without removing it. 
+        if (this.isEmpty()) 
+            return "No elements in Queue"; 
+        return this.items[0]; 
+    }
+
+    // rear function 
+    rear() { 
+        // returns the lowest priorty 
+        // element of the queue 
+        if (this.isEmpty()) 
+            return "No elements in Queue"; 
+        return this.items[this.items.length - 1]; 
+    }
+
+    // isEmpty function 
+    isEmpty() { 
+        // return true if the queue is empty. 
+        return this.items.length == 0; 
+    } 
+
+    // printQueue function 
+    // prints all the element of the queue 
+    printPQueue() { 
+        var str = ""; 
+        for (var i = 0; i < this.items.length; i++) 
+            str += this.items[i].element + " "; 
+        return str;
+    } 
+} 
+
 //Functions
 function mapToArray(map) {
 	var array = [];
@@ -230,22 +340,22 @@ for (i = 4; i < ROWS - 4; i++) {
 	enemies.push(['mob', i, i]);
 }
 */
-
+/*
 for (i = 4; i < COLS; i += 4) {
 	for (j = 4; j < ROWS; j += 4) {
 		enemies.push(['mob', i, j]);
 	}
 }
-
+*/
 //Add smartys
-//enemies.push(['smarty', 8, 8]);
-/*
-for (i = 8; i < COLS; i += 8) {
-	for (j = 8; j < ROWS; j += 8) {
+//enemies.push(['smarty', 3, 3]);
+
+for (i = 4; i < COLS; i += 4) {
+	for (j = 4; j < ROWS; j += 4) {
 		enemies.push(['smarty', i, j]);
 	}
 }
-*/
+
 
 //Add bosses
 //enemies.push(['boss', COLS / 2, ROWS / 2]);
@@ -263,6 +373,7 @@ function moveEnemies() {
 				break;
 			case 'smarty':
 				var moves = realMoves(getTile([enemy[1] * TILE_S, enemy[2] * TILE_S]));
+				//moves.push([0,0]);
 				var move = getSmartMove(enemy, moves);
 				enemy[1] += move[0];
 				enemy[2] += move[1];
@@ -294,46 +405,135 @@ function realMoves(tile) {
 	return moves;
 }
 
+//Returns neighbiring tiles and the move taken to get there
+function getNeighbors(x, y) {
+	neighbors = [];
+	var tile = grid[x][y];
+	if (!tile[0]) {
+		neighbors.push([[x - 1, y],[-1, 0]]);
+	}
+	if (!tile[1]) {
+		neighbors.push([[x, y - 1], [0, -1]]);
+	}
+	if (!tile[2]) {
+		neighbors.push([[x + 1, y], [1, 0]]);
+	}
+	if (!tile[3]) {
+		neighbors.push([[x, y + 1], [0, 1]]);
+	}
+	return neighbors;
+}
+
 //Gets a smart move for smartys
 function getSmartMove(enemy, moves) {
 	closest = [ROWS * 2, COLS * 2];
 	dist = distanceToPlayer(enemy, closest);
 	for (let [id, player] of map) {
-		if (distanceToPlayer(enemy, player) < dist) {
+		if (distanceToPlayer(enemy, [player[0]/TILE_S, player[1]/TILE_S]) < dist) {
 			dist = distanceToPlayer(enemy, player);
-			closest = [player[0], player[1]];
+			closest = [player[0]/TILE_S, player[1]/TILE_S];
 		}
 	}
-	var vector = [enemy[1] - closest[0], enemy[2] - closest[1]];
+	if (map.size) {
+		var directions = aStarSearch([enemy[1], enemy[2]], closest, 5);
+		if (directions == null) {
+			return moves[Math.floor((Math.random() * moves.length))];
+		}
+		return directions[0];
+	}
+	/*
+	console.log(enemy);
+	console.log(closest);
 	bestMove = moves[0];
-	bestDist = distanceToPlayer(vector);
+	bestDist = distance([enemy[1]+bestMove[0], enemy[2]+bestMove[1]], closest);
+	console.log("initial", bestDist);
 	for (let move of moves) {
-		if (distance(vector, move) < bestDist) {
-			bestDist = distance(vector, move);
+		console.log("inloop", distance([enemy[1]+move[0], enemy[2]+move[1]], closest));
+		if (distance([enemy[1]+move[0], enemy[2]+move[1]], closest) < bestDist) {
+			console.log('pls');
+			bestDist = distanceToPlayer([enemy[1]+move[0], enemy[2]+move[1]], closest);
 			bestMove = move;
 		}
 	}
-	return move;
+	*/
+	return moves[Math.floor((Math.random() * moves.length))];
 }
+
+function aStarSearch(start, goal, depth, heuristic = null) {
+    //Search the node that has the lowest combined cost and heuristic first
+    closed = [];
+    var temp;
+    q = new PriorityQueue();
+    q.push(start);
+    var node;
+    while (true) {
+        if (q.isEmpty()) {
+            return null;
+        }
+        node = q.dequeue();
+        if (closed.includes(node.element) || node.directions.length > depth) {
+            continue;
+        }
+        closed.push(node.element);
+        if ((goal[0] == node.element[0]) && (goal[1] == node.element[1])) {
+            return node.directions;
+        }
+        children = getNeighbors(node.element[0], node.element[1]);
+        for (let x of children) {
+            if (!closed.includes(x[0])) {
+            	temp = node.directions.slice();
+            	temp.push(x[1]);
+                q.update(x[0], node.priority + 1, temp);// + heuristic(x[0], problem));
+            }
+        }
+    }
+}
+
+/* Beginning of ASTAR
+def aStarSearch(problem, heuristic=nullHeuristic):
+    """Search the node that has the lowest combined cost and heuristic first."""
+    closed = []
+    q = new PriorityQueue()
+    q.push(searchNode(problem.getStartState()), 0)
+    while True:
+        if q.isEmpty():
+            return None
+        node = q.pop()
+        if (node.n in closed):
+            continue
+        closed.append(node.n)
+        if problem.isGoalState(node.n):
+            return node.d
+        children = problem.getSuccessors(node.n)
+        for x in children:
+            if x[0] not in closed:
+                q.update(searchNode(x[0], node.p + x[2], node.d + [x[1]]), node.p + x[2] + heuristic(x[0], problem))
+*/
 
 //Gets the distance from an enemy to an objective
 function distanceToPlayer(enemy, player) {
 	//console.log(player);
-	return enemy[1] - player[0] + enemy[2] - player[1];
+	return Math.abs(enemy[1] - player[0]) + Math.abs(enemy[2] - player[1]);
 }
 
 //General distance
 function distance(a, b) {
-	return a[0] - b[0] + a[1] - b[1];
+	return Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]);
 }
 
 /* The end of enemies */
+
+/* Leaderboard */
+
+var leaderboard = [];
+
+/* End of leaderboard */
 
 function afterMove(id) {
 	var x = map.get(id)[0] / TILE_S,
 		y = map.get(id)[1] / TILE_S;
 	updateTile(map.get(id));
-	eatFood(x, y, id);											//Eat food if available
+	eatFood(x, y, id);
 }
 
 function continuous(id) {
@@ -377,7 +577,7 @@ io.on('connection', function(socket){               //When a connection is made,
         }
     });
 
-    socket.on('A', function(){                      //When socket gets a W event from a client...
+    socket.on('A', function(){                      //When socket gets an A event from a client...
         if (!getTile(map.get(socket.id))[0]) {
             if (map.get(socket.id)[0] > 0) {
                 map.set(socket.id, [map.get(socket.id)[0] - TILE_S, map.get(socket.id)[1], map.get(socket.id)[2], map.get(socket.id)[3]]);
@@ -386,7 +586,7 @@ io.on('connection', function(socket){               //When a connection is made,
         }
     });
 
-    socket.on('S', function(){                      //When socket gets a W event from a client...
+    socket.on('S', function(){                      //When socket gets an S event from a client...
         if (!getTile(map.get(socket.id))[3]) {
             if (map.get(socket.id)[1] < TILE_S * (ROWS - 1)) {
                 map.set(socket.id, [map.get(socket.id)[0], map.get(socket.id)[1] + TILE_S, map.get(socket.id)[2], map.get(socket.id)[3]]);
@@ -395,7 +595,7 @@ io.on('connection', function(socket){               //When a connection is made,
         }
     });
 
-    socket.on('D', function(){                      //When socket gets a W event from a client...
+    socket.on('D', function(){                      //When socket gets a D event from a client...
         if (!getTile(map.get(socket.id))[2]) {
             if (map.get(socket.id)[0] < TILE_S * (COLS - 1)) {
                 map.set(socket.id, [map.get(socket.id)[0] + TILE_S, map.get(socket.id)[1], map.get(socket.id)[2], map.get(socket.id)[3]]);
