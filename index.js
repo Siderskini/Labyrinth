@@ -157,38 +157,38 @@ function updateTile(player) {
     }
 }
 
-function closeWall(playerx, playery, wall){
-    grid[playerx][playery][wall] = true;
+function closeWall(x, y, wall){
+    grid[x][y][wall] = true;
     switch (wall) {
         case 0:
-            grid[playerx - 1][playery][2] = true;
+            grid[x - 1][y][2] = true;
             break;
         case 1:
-            grid[playerx][playery - 1][3] = true;
+            grid[x][y - 1][3] = true;
             break;
         case 2:
-            grid[playerx + 1][playery][0] = true;
+            grid[x + 1][y][0] = true;
             break;
         case 3:
-            grid[playerx][playery + 1][1] = true;
+            grid[x][y + 1][1] = true;
             break;
     }
 }
 
-function openWall(playerx, playery, wall){
-    grid[playerx][playery][wall] = false;
+function openWall(x, y, wall){
+    grid[x][y][wall] = false;
     switch (wall) {
         case 0:
-            grid[playerx - 1][playery][2] = false;
+            grid[x - 1][y][2] = false;
             break;
         case 1:
-            grid[playerx][playery - 1][3] = false;
+            grid[x][y - 1][3] = false;
             break;
         case 2:
-            grid[playerx + 1][playery][0] = false;
+            grid[x + 1][y][0] = false;
             break;
         case 3:
-            grid[playerx][playery + 1][1] = false;
+            grid[x][y + 1][1] = false;
             break;
     }
 }
@@ -266,6 +266,48 @@ createMaze(grid, ROWS/2, COLS/2);
 //##########################################//
 //////////////////////////////////////////////
 
+/* Safe zones */
+var safeGrid = [];
+for (i = 0; i < COLS; i++) {
+    safeGrid[i] = new Array(ROWS);
+    for (j = 0; j < ROWS; j++) {
+        safeGrid[i][j] = false;
+    }
+}
+
+function createSafeZone(coords, length, width) {
+	for (i = coords[0]; i < coords[0] + width; i++) {
+		openWall(i, coords[1], 0);
+		openWall(i, coords[1], 3);
+		openWall(i, coords[1], 2);
+		openWall(i, coords[1] + length, 0);
+		openWall(i, coords[1] + length, 1);
+		openWall(i, coords[1] + length, 2);
+		//console.log(i, coords[1], grid[i][coords[1]]);
+		//console.log(i, coords[1] + length, grid[i][coords[1] + length]);
+	}
+	for (j = coords[1]; j < coords[1] + length; j++) {
+		openWall(coords[0], j, 1);
+		openWall(coords[0], j, 2);
+		openWall(coords[0], j, 3);
+		openWall(coords[0] + width, j, 0);
+		openWall(coords[0] + width, j, 1);
+		openWall(coords[0] + width, j, 3);
+	}
+
+	for (i = coords[0] + 1; i < coords[0] + width; i++) {
+		for (j = coords[1] + 1; j < coords[1] + length; j++) {
+			safeGrid[i][j] = true;
+			grid[i][j] = [false, false, false, false];
+		}
+	}
+}
+
+//Create the safe zones
+createSafeZone ([COLS / 2 - 4, ROWS / 2 - 4], 8, 8);
+
+/* The end of safe zones */
+
 /* The beginning of items
 	Item grid holds items, aka collectibles for benefits
 	Items can be food, keys, or anything else that is collected by running around the grid
@@ -275,7 +317,9 @@ var foodGrid = new Array(COLS);
 for (i = 0; i < COLS; i++) {
     foodGrid[i] = new Array(ROWS);
     for (j = 0; j < ROWS; j++) {
-        foodGrid[i][j] = true;
+    	if (!safeGrid[i][j]) {
+        	foodGrid[i][j] = true;
+    	}
     }
 }
 
@@ -286,7 +330,7 @@ function eatFood(x, y, id) {
 		map.set(id, [map.get(id)[0], map.get(id)[1], map.get(id)[2], map.get(id)[3] + 1]); //Increase score by 1 for eating a food
 		setTimeout(function(){
 			foodGrid[x][y] = true;
-		},60000);
+		},30000);
 	}
 }
 /* The end of items */
@@ -350,9 +394,11 @@ for (i = 4; i < COLS; i += 4) {
 //Add smartys
 //enemies.push(['smarty', 3, 3]);
 
-for (i = 4; i < COLS; i += 4) {
-	for (j = 4; j < ROWS; j += 4) {
-		enemies.push(['smarty', i, j]);
+for (i = 0; i < COLS; i += 4) {
+	for (j = 0; j < ROWS; j += 4) {
+		if (!safeGrid[i][j]) {
+			enemies.push(['smarty', i, j]);
+		}
 	}
 }
 
@@ -364,7 +410,7 @@ function moveEnemies() {
 	for (let enemy of enemies) {
 		switch (enemy[0]) {
 			case 'mob':
-				var moves = realMoves(getTile([enemy[1] * TILE_S, enemy[2] * TILE_S]));
+				var moves = realMoves(enemy[1] , enemy[2]);
 				if (moves.length) {
 					var move = moves[Math.floor((Math.random() * moves.length))];		//Mobs randomwalk
 					enemy[1] += move[0];
@@ -372,9 +418,12 @@ function moveEnemies() {
 				}
 				break;
 			case 'smarty':
-				var moves = realMoves(getTile([enemy[1] * TILE_S, enemy[2] * TILE_S]));
+				var moves = realMoves(enemy[1] , enemy[2]);
 				//moves.push([0,0]);
 				var move = getSmartMove(enemy, moves);
+				if (move == null) {
+					move = [0, 0];
+				}
 				enemy[1] += move[0];
 				enemy[2] += move[1];
 				break;
@@ -388,18 +437,19 @@ setInterval(function(){
 },1000);
 
 //Gets possible moves for an enemy
-function realMoves(tile) {
+function realMoves(x, y) {
+	var tile = getTile([x * TILE_S, y * TILE_S]);
 	moves = [];
-	if (!tile[0]) {
+	if (!tile[0] && !safeGrid[x - 1][y]) {
 		moves.push([-1, 0]);
 	}
-	if (!tile[1]) {
+	if (!tile[1] && !safeGrid[x][y - 1]) {
 		moves.push([0, -1]);
 	}
-	if (!tile[2]) {
+	if (!tile[2] && !safeGrid[x + 1][y]) {
 		moves.push([1, 0]);
 	}
-	if (!tile[3]) {
+	if (!tile[3] && !safeGrid[x][y + 1]) {
 		moves.push([0, 1]);
 	}
 	return moves;
@@ -409,16 +459,16 @@ function realMoves(tile) {
 function getNeighbors(x, y) {
 	neighbors = [];
 	var tile = grid[x][y];
-	if (!tile[0]) {
+	if (!tile[0] && !safeGrid[x - 1][y]) {
 		neighbors.push([[x - 1, y],[-1, 0]]);
 	}
-	if (!tile[1]) {
+	if (!tile[1] && !safeGrid[x][y - 1]) {
 		neighbors.push([[x, y - 1], [0, -1]]);
 	}
-	if (!tile[2]) {
+	if (!tile[2] && !safeGrid[x + 1][y]) {
 		neighbors.push([[x + 1, y], [1, 0]]);
 	}
-	if (!tile[3]) {
+	if (!tile[3] && !safeGrid[x][y + 1]) {
 		neighbors.push([[x, y + 1], [0, 1]]);
 	}
 	return neighbors;
@@ -435,10 +485,12 @@ function getSmartMove(enemy, moves) {
 		}
 	}
 	if (map.size) {
-		var directions = aStarSearch([enemy[1], enemy[2]], closest, 5);
+		var directions = aStarSearch([enemy[1], enemy[2]], closest, 4);
 		if (directions == null) {
+			//console.log(moves);
 			return moves[Math.floor((Math.random() * moves.length))];
 		}
+		//console.log('intelligent move: ', directions[0]);
 		return directions[0];
 	}
 	/*
@@ -542,7 +594,7 @@ function continuous(id) {
 	eatFood(x, y, id);											//Eat food if available
 	for (let enemy of enemies) {								//Die if touching enemy
 		if ((enemy[1] == x) && (enemy[2] == y)) {
-			map.set(id, [TILE_S, TILE_S, map.get(id)[2], 0]);
+			map.set(id, [(COLS / 2) * TILE_S, (ROWS / 2) * TILE_S, map.get(id)[2], 0]);
 		}
 	}
 }
@@ -554,10 +606,10 @@ var map = new Map();
 
 io.on('connection', function(socket){               //When a connection is made, calls the function which...
     console.log('socket connected!', socket.id)     //Logs this message to console, along with the socket id of the connection
-    map.set(socket.id, [TILE_S, TILE_S, (map.size % 4) + 1, 0]);
+    map.set(socket.id, [(COLS / 2) * TILE_S, (ROWS / 2) * TILE_S, (map.size % 4) + 1, 0]);
     //console.log(map);
     io.to(socket.id).emit('privateState', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1], score: map.get(socket.id)[3]});
-    io.emit('begin', {locations: mapToArray(map), grid: grid, food: foodGrid, enemies: enemies});
+    io.to(socket.id).emit('begin', {locations: mapToArray(map), grid: grid, food: foodGrid, enemies: enemies});
 
     //Handles continuous events, including emitting gameState to client
     setInterval(function(){

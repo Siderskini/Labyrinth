@@ -19,7 +19,20 @@ The purpose of this document is to keep a bucket list of things that I want to d
 		- Some traps, like in the underground in Pokemon 4th gen games
 
 
-Enemies
+- Enemies
 	- There is currently a randomwalk mob called 'mob'
-	- I want to make a low level intelligence mob called 'smarty'
-	- Eventually I want to make a very intelligent mob called 'boss'
+	- There are now low level intelligence mobs called smartys that have limited UCS
+	  playerfinding algorithms
+	- Eventually I want to make a very intelligent mob called 'boss' with supreme
+	  intelligence, but idk how to make this happen
+	- To make enemy pathfinding more efficient, I might want to make a second map with 
+	  locations mapped to players so that I can reduce runtime and make enemy 
+	  pathfinding more efficient. This might take a little bit of overhead.
+
+- Safe zone
+	- Currently, players spawn at [1, 1]. This is kind of basic af and I want to make 
+	  it so that there is maybe a safe zone somewhere, like maybe at the center of the 	  maze
+	- If I make a "make safe zone" function, I can easily create safe rectangles with
+	  the parameters of upper left corner, length and width of the rectangle
+	- I do not want enemies to be able to enter the safe zone
+
