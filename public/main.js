@@ -146,7 +146,7 @@ socket.on('begin', function(data) {
 canvas = document.createElement("canvas");
 ctx = canvas.getContext("2d");
 canvas.height = window.innerHeight - (window.innerHeight % TILE_S);
-canvas.width = canvas.height;//window.innerWidth - (window.innerWidth % TILE_S);
+canvas.width = window.innerWidth - (window.innerWidth % TILE_S);//canvas.height;
 canvas.setAttribute("tabIndex", "0");
 canvas.focus();
 
