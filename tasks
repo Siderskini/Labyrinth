@@ -35,3 +35,5 @@ The purpose of this document is to keep a bucket list of things that I want to d
 	- Enemies do not enter the safe zone
 	- There is no food in the safe zone
 
+- Sometime, I need to move all of the TILE_S bullshit to the client side so that server side doesn't need to do unnecessary divisions
+

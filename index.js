@@ -480,7 +480,8 @@ function getSmartMove(enemy, moves) {
 	dist = distanceToPlayer(enemy, closest);
 	for (let [id, player] of map) {
 		if (distanceToPlayer(enemy, [player[0]/TILE_S, player[1]/TILE_S]) < dist) {
-			dist = distanceToPlayer(enemy, player);
+			dist = distanceToPlayer(enemy, [player[0]/TILE_S, player[1]/TILE_S]);
+			//console.log(dist);
 			closest = [player[0]/TILE_S, player[1]/TILE_S];
 		}
 	}
@@ -490,7 +491,7 @@ function getSmartMove(enemy, moves) {
 			//console.log(moves);
 			return moves[Math.floor((Math.random() * moves.length))];
 		}
-		//console.log('intelligent move: ', directions[0]);
+		console.log('intelligent move: ', directions[0], enemy[1], enemy[2]);
 		return directions[0];
 	}
 	return moves[Math.floor((Math.random() * moves.length))];
