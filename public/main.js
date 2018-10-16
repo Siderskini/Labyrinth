@@ -125,7 +125,7 @@ socket.on('gameState', function(data) {
         playerGrid[i] = blankPlayerGrid[i].slice();
     }
 	for (let value of data.locations) {
-        playerGrid[value[0]/TILE_S][value[1]/TILE_S] = value[2];
+        playerGrid[value[0]][value[1]] = value[2];
 	}
     for (var i = 0; i < blankPlayerGrid.length; i++) {
         enemyGrid[i] = blankPlayerGrid[i].slice();
@@ -142,7 +142,7 @@ socket.on('begin', function(data) {
         playerGrid[i] = blankPlayerGrid[i].slice();
     }
     for (let value of data.locations) {
-        playerGrid[value[0]/TILE_S][value[1]/TILE_S] = value[2];
+        playerGrid[value[0]][value[1]] = value[2];
     }
     for (var i = 0; i < blankPlayerGrid.length; i++) {
         enemyGrid[i] = blankPlayerGrid[i].slice();
@@ -188,37 +188,37 @@ function drawAll() {
     //The beginning of REAL rendering
     var canvasi = 0,
         canvasj = 0;
-    if (playerx < canvas.width/2) {
-        if (playery < canvas.height/2) {                                                                            //Player is in Area 1
+    if (playerx * TILE_S < canvas.width/2) {
+        if (playery * TILE_S < canvas.height/2) {                                                                            //Player is in Area 1
             drawMaze (0, canvas.width, 0, canvas.height);     //Renders the maze
         }
-        else if (playery > maze_h - canvas.height/2) {                                                               //Player is in Area 2
+        else if (playery * TILE_S > maze_h - canvas.height/2) {                                                               //Player is in Area 2
             drawMaze (0, canvas.width, maze_h - canvas.height, maze_h);     //Renders the maze
         }
         else {                                                                                                        //Player is in Area 3
-            drawMaze (0, canvas.width, (playery - canvas.height/2), (playery + canvas.height/2));
+            drawMaze (0, canvas.width, (playery * TILE_S - canvas.height/2), (playery * TILE_S + canvas.height/2));
         }
     }
-    else if (playerx > maze_w - canvas.width/2) {
-        if (playery < canvas.height/2) {                                                                              //Player is in Area 4
+    else if (playerx * TILE_S > maze_w - canvas.width/2) {
+        if (playery * TILE_S < canvas.height/2) {                                                                              //Player is in Area 4
             drawMaze (maze_w - canvas.width, maze_w, 0, canvas.height);
         }
-        else if (playery > maze_h - canvas.height/2) {                                                                //Player is in Area 5
+        else if (playery * TILE_S > maze_h - canvas.height/2) {                                                                //Player is in Area 5
             drawMaze (maze_w - canvas.width, maze_w, maze_h - canvas.height, maze_h);
         }
         else {                                                                                                        //Player is in Area 6
-            drawMaze (maze_w - canvas.width, maze_w, playery - canvas.height/2, playery + canvas.height/2);
+            drawMaze (maze_w - canvas.width, maze_w, playery * TILE_S - canvas.height/2, playery *TILE_S + canvas.height/2);
         }
     }
     else {
-        if (playery < canvas.height/2) {                                                                              //Player is in Area 7
-            drawMaze (playerx - canvas.width/2, playerx + canvas.width/2, 0, canvas.height);
+        if (playery * TILE_S < canvas.height/2) {                                                                              //Player is in Area 7
+            drawMaze (playerx * TILE_S - canvas.width/2, playerx * TILE_S + canvas.width/2, 0, canvas.height);
         }
-        else if (playery > maze_h - canvas.height/2) {                                                                //Player is in Area 8
-            drawMaze (playerx - canvas.width/2, playerx + canvas.width/2, maze_h - canvas.height, maze_h);
+        else if (playery * TILE_S > maze_h - canvas.height/2) {                                                                //Player is in Area 8
+            drawMaze (playerx * TILE_S - canvas.width/2, playerx * TILE_S + canvas.width/2, maze_h - canvas.height, maze_h);
         }
         else {                                                                                                        //Player is in Area 9
-            drawMaze (playerx - canvas.width/2, playerx + canvas.width/2, playery - canvas.height/2, playery + canvas.height/2);
+            drawMaze (playerx * TILE_S - canvas.width/2, playerx * TILE_S + canvas.width/2, playery * TILE_S - canvas.height/2, playery * TILE_S + canvas.height/2);
         }
     }
 

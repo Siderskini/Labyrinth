@@ -12,8 +12,7 @@ var server = app.listen(4000, function(){               //Sets up a server conne
 app.use(express.static('public'));      //Uses files in folder public as static files through express (?)
 
 //Grid variables
-var TILE_S = 48,
-    COLS = 48,
+var COLS = 48,
     ROWS = 48;
 
 //The grid itself
@@ -146,8 +145,8 @@ function mapToArray(map) {
 
 function updateTile(player) {
     if (isDeadEnd(player)) {
-        var playerx = player[0]/TILE_S;
-        var playery = player[1]/TILE_S;
+        var playerx = player[0];
+        var playery = player[1];
         if ((playerx > 0) && (playery > 0) && (playerx < (ROWS - 1)) && (playery < (COLS - 1))) {
             var entrance = grid[playerx][playery].indexOf(false);
             closeWall(playerx, playery, entrance);
@@ -194,14 +193,14 @@ function openWall(x, y, wall){
 }
 
 function getTile(player) {
-    var playerx = player[0]/TILE_S;
-    var playery = player[1]/TILE_S;
+    var playerx = player[0];
+    var playery = player[1];
     return grid[playerx][playery];
 }
 
 function isDeadEnd(player) {
-    var playerx = player[0]/TILE_S;
-    var playery = player[1]/TILE_S;
+    var playerx = player[0];
+    var playery = player[1];
     return grid[playerx][playery].reduce(add, 0) == 3;
 }
 
@@ -438,7 +437,7 @@ setInterval(function(){
 
 //Gets possible moves for an enemy
 function realMoves(x, y) {
-	var tile = getTile([x * TILE_S, y * TILE_S]);
+	var tile = getTile([x, y]);
 	moves = [];
 	if (!tile[0] && !safeGrid[x - 1][y]) {
 		moves.push([-1, 0]);
@@ -479,10 +478,10 @@ function getSmartMove(enemy, moves) {
 	closest = [ROWS * 2, COLS * 2];
 	dist = distanceToPlayer(enemy, closest);
 	for (let [id, player] of map) {
-		if (distanceToPlayer(enemy, [player[0]/TILE_S, player[1]/TILE_S]) < dist) {
-			dist = distanceToPlayer(enemy, [player[0]/TILE_S, player[1]/TILE_S]);
+		if (distanceToPlayer(enemy, [player[0], player[1]]) < dist) {
+			dist = distanceToPlayer(enemy, [player[0], player[1]]);
 			//console.log(dist);
-			closest = [player[0]/TILE_S, player[1]/TILE_S];
+			closest = [player[0], player[1]];
 		}
 	}
 	if (map.size) {
@@ -491,7 +490,7 @@ function getSmartMove(enemy, moves) {
 			//console.log(moves);
 			return moves[Math.floor((Math.random() * moves.length))];
 		}
-		console.log('intelligent move: ', directions[0], enemy[1], enemy[2]);
+		//console.log('intelligent move: ', directions[0], enemy[1], enemy[2]);
 		return directions[0];
 	}
 	return moves[Math.floor((Math.random() * moves.length))];
@@ -568,19 +567,19 @@ var leaderboard = [];
 /* End of leaderboard */
 
 function afterMove(id) {
-	var x = map.get(id)[0] / TILE_S,
-		y = map.get(id)[1] / TILE_S;
+	var x = map.get(id)[0],
+		y = map.get(id)[1];
 	updateTile(map.get(id));
 	eatFood(x, y, id);
 }
 
 function continuous(id) {
-	var x = map.get(id)[0] / TILE_S,
-		y = map.get(id)[1] / TILE_S;
+	var x = map.get(id)[0],
+		y = map.get(id)[1];
 	eatFood(x, y, id);											//Eat food if available
 	for (let enemy of enemies) {								//Die if touching enemy
 		if ((enemy[1] == x) && (enemy[2] == y)) {
-			map.set(id, [(COLS / 2) * TILE_S, (ROWS / 2) * TILE_S, map.get(id)[2], 0]);
+			map.set(id, [(COLS / 2), (ROWS / 2), map.get(id)[2], 0]);
 		}
 	}
 }
@@ -607,14 +606,14 @@ io.on('connection', function(socket){               //When a connection is made,
 	},100);
 
     socket.on('begin', function(data) {
-    	map.set(socket.id, [(COLS / 2) * TILE_S, (ROWS / 2) * TILE_S, data.color, 0, data.name]);
+    	map.set(socket.id, [(COLS / 2), (ROWS / 2), data.color, 0, data.name]);
     	io.to(socket.id).emit('privateState', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1], score: map.get(socket.id)[3]});
     });
 
     socket.on('W', function(){                      //When socket gets a W event from a client...
         if (map.get(socket.id) && !getTile(map.get(socket.id))[1]) {
             if (map.get(socket.id)[1] > 0) {
-                map.set(socket.id, [map.get(socket.id)[0], map.get(socket.id)[1] - TILE_S, map.get(socket.id)[2], map.get(socket.id)[3], map.get(socket.id)[4]]);
+                map.set(socket.id, [map.get(socket.id)[0], map.get(socket.id)[1] - 1, map.get(socket.id)[2], map.get(socket.id)[3], map.get(socket.id)[4]]);
                 afterMove(socket.id);
             }
         }
@@ -623,7 +622,7 @@ io.on('connection', function(socket){               //When a connection is made,
     socket.on('A', function(){                      //When socket gets an A event from a client...
         if (map.get(socket.id) && !getTile(map.get(socket.id))[0]) {
             if (map.get(socket.id)[0] > 0) {
-                map.set(socket.id, [map.get(socket.id)[0] - TILE_S, map.get(socket.id)[1], map.get(socket.id)[2], map.get(socket.id)[3], map.get(socket.id)[4]]);
+                map.set(socket.id, [map.get(socket.id)[0] - 1, map.get(socket.id)[1], map.get(socket.id)[2], map.get(socket.id)[3], map.get(socket.id)[4]]);
                 afterMove(socket.id);
             }
         }
@@ -631,8 +630,8 @@ io.on('connection', function(socket){               //When a connection is made,
 
     socket.on('S', function(){                      //When socket gets an S event from a client...
         if (map.get(socket.id) && !getTile(map.get(socket.id))[3]) {
-            if (map.get(socket.id)[1] < TILE_S * (ROWS - 1)) {
-                map.set(socket.id, [map.get(socket.id)[0], map.get(socket.id)[1] + TILE_S, map.get(socket.id)[2], map.get(socket.id)[3], map.get(socket.id)[4]]);
+            if (map.get(socket.id)[1] < (ROWS - 1)) {
+                map.set(socket.id, [map.get(socket.id)[0], map.get(socket.id)[1] + 1, map.get(socket.id)[2], map.get(socket.id)[3], map.get(socket.id)[4]]);
                 afterMove(socket.id);
             }
         }
@@ -640,8 +639,8 @@ io.on('connection', function(socket){               //When a connection is made,
 
     socket.on('D', function(){                      //When socket gets a D event from a client...
         if (map.get(socket.id) && !getTile(map.get(socket.id))[2]) {
-            if (map.get(socket.id)[0] < TILE_S * (COLS - 1)) {
-                map.set(socket.id, [map.get(socket.id)[0] + TILE_S, map.get(socket.id)[1], map.get(socket.id)[2], map.get(socket.id)[3], map.get(socket.id)[4]]);
+            if (map.get(socket.id)[0] < (COLS - 1)) {
+                map.set(socket.id, [map.get(socket.id)[0] + 1, map.get(socket.id)[1], map.get(socket.id)[2], map.get(socket.id)[3], map.get(socket.id)[4]]);
                 afterMove(socket.id);
             }
         }
