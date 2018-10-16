@@ -493,21 +493,6 @@ function getSmartMove(enemy, moves) {
 		//console.log('intelligent move: ', directions[0]);
 		return directions[0];
 	}
-	/*
-	console.log(enemy);
-	console.log(closest);
-	bestMove = moves[0];
-	bestDist = distance([enemy[1]+bestMove[0], enemy[2]+bestMove[1]], closest);
-	console.log("initial", bestDist);
-	for (let move of moves) {
-		console.log("inloop", distance([enemy[1]+move[0], enemy[2]+move[1]], closest));
-		if (distance([enemy[1]+move[0], enemy[2]+move[1]], closest) < bestDist) {
-			console.log('pls');
-			bestDist = distanceToPlayer([enemy[1]+move[0], enemy[2]+move[1]], closest);
-			bestMove = move;
-		}
-	}
-	*/
 	return moves[Math.floor((Math.random() * moves.length))];
 }
 
@@ -606,9 +591,9 @@ var map = new Map();
 
 io.on('connection', function(socket){               //When a connection is made, calls the function which...
     console.log('socket connected!', socket.id)     //Logs this message to console, along with the socket id of the connection
-    map.set(socket.id, [(COLS / 2) * TILE_S, (ROWS / 2) * TILE_S, (map.size % 4) + 1, 0]);
+    //map.set(socket.id, [(COLS / 2) * TILE_S, (ROWS / 2) * TILE_S, (map.size % 4) + 1, 0]);
     //console.log(map);
-    io.to(socket.id).emit('privateState', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1], score: map.get(socket.id)[3]});
+    //io.to(socket.id).emit('privateState', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1], score: map.get(socket.id)[3]});
     io.to(socket.id).emit('begin', {locations: mapToArray(map), grid: grid, food: foodGrid, enemies: enemies});
 
     //Handles continuous events, including emitting gameState to client
@@ -620,37 +605,42 @@ io.on('connection', function(socket){               //When a connection is made,
     	}
 	},100);
 
+    socket.on('begin', function(data) {
+    	map.set(socket.id, [(COLS / 2) * TILE_S, (ROWS / 2) * TILE_S, data.color, 0, data.name]);
+    	io.to(socket.id).emit('privateState', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1], score: map.get(socket.id)[3]});
+    });
+
     socket.on('W', function(){                      //When socket gets a W event from a client...
-        if (!getTile(map.get(socket.id))[1]) {
+        if (map.get(socket.id) && !getTile(map.get(socket.id))[1]) {
             if (map.get(socket.id)[1] > 0) {
-                map.set(socket.id, [map.get(socket.id)[0], map.get(socket.id)[1] - TILE_S, map.get(socket.id)[2], map.get(socket.id)[3]]);
+                map.set(socket.id, [map.get(socket.id)[0], map.get(socket.id)[1] - TILE_S, map.get(socket.id)[2], map.get(socket.id)[3], map.get(socket.id)[4]]);
                 afterMove(socket.id);
             }
         }
     });
 
     socket.on('A', function(){                      //When socket gets an A event from a client...
-        if (!getTile(map.get(socket.id))[0]) {
+        if (map.get(socket.id) && !getTile(map.get(socket.id))[0]) {
             if (map.get(socket.id)[0] > 0) {
-                map.set(socket.id, [map.get(socket.id)[0] - TILE_S, map.get(socket.id)[1], map.get(socket.id)[2], map.get(socket.id)[3]]);
+                map.set(socket.id, [map.get(socket.id)[0] - TILE_S, map.get(socket.id)[1], map.get(socket.id)[2], map.get(socket.id)[3], map.get(socket.id)[4]]);
                 afterMove(socket.id);
             }
         }
     });
 
     socket.on('S', function(){                      //When socket gets an S event from a client...
-        if (!getTile(map.get(socket.id))[3]) {
+        if (map.get(socket.id) && !getTile(map.get(socket.id))[3]) {
             if (map.get(socket.id)[1] < TILE_S * (ROWS - 1)) {
-                map.set(socket.id, [map.get(socket.id)[0], map.get(socket.id)[1] + TILE_S, map.get(socket.id)[2], map.get(socket.id)[3]]);
+                map.set(socket.id, [map.get(socket.id)[0], map.get(socket.id)[1] + TILE_S, map.get(socket.id)[2], map.get(socket.id)[3], map.get(socket.id)[4]]);
                 afterMove(socket.id);
             }
         }
     });
 
     socket.on('D', function(){                      //When socket gets a D event from a client...
-        if (!getTile(map.get(socket.id))[2]) {
+        if (map.get(socket.id) && !getTile(map.get(socket.id))[2]) {
             if (map.get(socket.id)[0] < TILE_S * (COLS - 1)) {
-                map.set(socket.id, [map.get(socket.id)[0] + TILE_S, map.get(socket.id)[1], map.get(socket.id)[2], map.get(socket.id)[3]]);
+                map.set(socket.id, [map.get(socket.id)[0] + TILE_S, map.get(socket.id)[1], map.get(socket.id)[2], map.get(socket.id)[3], map.get(socket.id)[4]]);
                 afterMove(socket.id);
             }
         }

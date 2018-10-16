@@ -2,7 +2,10 @@
 var socket = io.connect('http://localhost:4000');	//Uses the io interface to connect as a socket to localhost:4000
 
 //Query DOM -- This is where all of the functionality of client side of the app happens
-	//feedback = document.getElementById('feedback');
+	wrapper = document.getElementById('wrapper'),
+    name = document.getElementById('name'),
+    color = document.getElementById('color'),
+    play = document.getElementById('play');
 
 //	Objects
 var canvas,
@@ -100,6 +103,14 @@ function drawEnemy(i, j, canvasi, canvasj) {
 }
 
 /* End of enemies */
+
+play.addEventListener('click', function() {      //Adds an event listener on button that when pressed, emits the message and handle to server
+    socket.emit('begin', {
+        name: name.value,
+        color: color.value
+    });
+    wrapper.parentNode.removeChild(wrapper);
+});
 
 socket.on('privateState', function(data) {
     playerx = data.playerx;
@@ -275,20 +286,7 @@ function drawMazeTile (i, j, canvasi, canvasj) {
 //Player drawing for REAL rendering
 function drawPlayer(i, j, canvasi, canvasj) {
     if (playerGrid[i][j]) {
-        switch(playerGrid[i][j]) {
-            case 1:
-                ctx.fillStyle = 'rgb(255, 0, 129)';
-                break;
-            case 2:
-                ctx.fillStyle = "green";
-                break;
-            case 3:
-                ctx.fillStyle = "red";
-                break;
-            case 4:
-                ctx.fillStyle = "yellow";
-                break;
-        }
+        ctx.fillStyle = playerGrid[i][j];
         ctx.fillRect(canvasi * TILE_S + 2, canvasj * TILE_S + 2, TILE_S - 4, TILE_S - 4);
     }
 }
