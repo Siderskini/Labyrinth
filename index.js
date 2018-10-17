@@ -15,6 +15,8 @@ app.use(express.static('public'));      //Uses files in folder public as static 
 var COLS = 48,
     ROWS = 48;
 
+var zeroToThree = [0, 1, 2, 3];
+
 //The grid itself
 var grid = new Array(COLS);
 for (i = 0; i < COLS; i++) {
@@ -147,10 +149,11 @@ function updateTile(player) {
     if (isDeadEnd(player)) {
         var playerx = player[0];
         var playery = player[1];
-        if ((playerx > 0) && (playery > 0) && (playerx < (ROWS - 1)) && (playery < (COLS - 1))) {
+        if ((playerx > 0) && (playery > 0) && (playerx < (ROWS - 1)) && (playery < (COLS - 1))) { //If it's not a border tile
             var entrance = grid[playerx][playery].indexOf(false);
             closeWall(playerx, playery, entrance);
-            var opening = Math.floor((Math.random() * 4));
+            var remaining = zeroToThree.filter(e => e !== entrance);
+            var opening = remaining[Math.floor((Math.random() * 3))];
             openWall(playerx, playery, opening);
         }
     }
