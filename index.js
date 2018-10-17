@@ -268,6 +268,28 @@ createMaze(grid, ROWS/2, COLS/2);
 //##########################################//
 //////////////////////////////////////////////
 
+/* Food */
+//Food grid is a grid used for storing food
+var foodGrid = new Array(COLS);
+for (i = 0; i < COLS; i++) {
+    foodGrid[i] = new Array(ROWS);
+    for (j = 0; j < ROWS; j++) {
+        foodGrid[i][j] = true;
+    }
+}
+
+//This function has rules for what happens when food is eaten
+function eatFood(x, y, id) {
+	if (foodGrid[x][y]) {
+		foodGrid[x][y] = false;
+		map.set(id, [map.get(id)[0], map.get(id)[1], map.get(id)[2], map.get(id)[3] + 1, map.get(id)[4]]); //Increase score by 1 for eating a food
+		setTimeout(function(){
+			foodGrid[x][y] = true;
+		},30000);
+	}
+}
+/* The end of food */
+
 /* Safe zones */
 var safeGrid = [];
 for (i = 0; i < COLS; i++) {
@@ -282,23 +304,28 @@ function createSafeZone(coords, length, width) {
 		openWall(i, coords[1], 0);
 		openWall(i, coords[1], 3);
 		openWall(i, coords[1], 2);
+		foodGrid[i][coords[1]] = false;
 		openWall(i, coords[1] + length, 0);
 		openWall(i, coords[1] + length, 1);
 		openWall(i, coords[1] + length, 2);
+		foodGrid[i][coords[1] + length] = false;
 	}
 	for (j = coords[1]; j < coords[1] + length; j++) {
 		openWall(coords[0], j, 1);
 		openWall(coords[0], j, 2);
 		openWall(coords[0], j, 3);
+		foodGrid[coords[0]][j] = false;
 		openWall(coords[0] + width, j, 0);
 		openWall(coords[0] + width, j, 1);
 		openWall(coords[0] + width, j, 3);
+		foodGrid[coords[0] + width][j] = false;
 	}
 
 	for (i = coords[0] + 1; i < coords[0] + width; i++) {
 		for (j = coords[1] + 1; j < coords[1] + length; j++) {
 			safeGrid[i][j] = true;
 			grid[i][j] = [false, false, false, false];
+			foodGrid[i][j] = false;
 		}
 	}
 }
@@ -308,51 +335,21 @@ createSafeZone ([COLS / 2 - 4, ROWS / 2 - 4], 8, 8);
 
 /* The end of safe zones */
 
-/* The beginning of items
-	Item grid holds items, aka collectibles for benefits
-	Items can be food, keys, or anything else that is collected by running around the grid
- */
-//Food grid is a grid used for storing food
-var foodGrid = new Array(COLS);
-for (i = 0; i < COLS; i++) {
-    foodGrid[i] = new Array(ROWS);
-    for (j = 0; j < ROWS; j++) {
-    	if (!safeGrid[i][j]) {
-        	foodGrid[i][j] = true;
-    	}
-    }
-}
+/* The beginning of powerups */
 
-//This function has rules for what happens when food is eaten
-function eatFood(x, y, id) {
-	if (foodGrid[x][y]) {
-		foodGrid[x][y] = false;
-		map.set(id, [map.get(id)[0], map.get(id)[1], map.get(id)[2], map.get(id)[3] + 1, map.get(id)[4]]); //Increase score by 1 for eating a food
-		setTimeout(function(){
-			foodGrid[x][y] = true;
-		},30000);
-	}
-}
-/* The end of items */
-
-
-/* The beginning of maze modification 
-	Maze modifiers are items that modify the maze
-	These can be traps, tools to help other players, etc.	
-*/
 var itemGrid = new Array(COLS);
 for (i = 0; i < COLS; i++) {
     itemGrid[i] = new Array(ROWS);
     for (j = 0; j < ROWS; j++) {
-        itemGrid[i][j] = [];
+        itemGrid[i][j] = null;
     }
 }
 
-/*
-function placeItem(x, y, id) {
-	itemGrid[i][j].push();
+function placeItem(x, y, item) {
+	itemGrid[i][j] = item;
+	foodGrid[i][j] = false;
 }
-*/
+
 
 /* The end of maze modification */
 
