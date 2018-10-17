@@ -282,8 +282,6 @@ function createSafeZone(coords, length, width) {
 		openWall(i, coords[1] + length, 0);
 		openWall(i, coords[1] + length, 1);
 		openWall(i, coords[1] + length, 2);
-		//console.log(i, coords[1], grid[i][coords[1]]);
-		//console.log(i, coords[1] + length, grid[i][coords[1] + length]);
 	}
 	for (j = coords[1]; j < coords[1] + length; j++) {
 		openWall(coords[0], j, 1);
@@ -326,7 +324,7 @@ for (i = 0; i < COLS; i++) {
 function eatFood(x, y, id) {
 	if (foodGrid[x][y]) {
 		foodGrid[x][y] = false;
-		map.set(id, [map.get(id)[0], map.get(id)[1], map.get(id)[2], map.get(id)[3] + 1]); //Increase score by 1 for eating a food
+		map.set(id, [map.get(id)[0], map.get(id)[1], map.get(id)[2], map.get(id)[3] + 1, map.get(id)[4]]); //Increase score by 1 for eating a food
 		setTimeout(function(){
 			foodGrid[x][y] = true;
 		},30000);
@@ -480,17 +478,14 @@ function getSmartMove(enemy, moves) {
 	for (let [id, player] of map) {
 		if (distanceToPlayer(enemy, [player[0], player[1]]) < dist) {
 			dist = distanceToPlayer(enemy, [player[0], player[1]]);
-			//console.log(dist);
 			closest = [player[0], player[1]];
 		}
 	}
 	if (map.size) {
 		var directions = aStarSearch([enemy[1], enemy[2]], closest, 4);
 		if (directions == null) {
-			//console.log(moves);
 			return moves[Math.floor((Math.random() * moves.length))];
 		}
-		//console.log('intelligent move: ', directions[0], enemy[1], enemy[2]);
 		return directions[0];
 	}
 	return moves[Math.floor((Math.random() * moves.length))];
@@ -549,7 +544,6 @@ def aStarSearch(problem, heuristic=nullHeuristic):
 
 //Gets the distance from an enemy to an objective
 function distanceToPlayer(enemy, player) {
-	//console.log(player);
 	return Math.abs(enemy[1] - player[0]) + Math.abs(enemy[2] - player[1]);
 }
 
@@ -561,8 +555,20 @@ function distance(a, b) {
 /* The end of enemies */
 
 /* Leaderboard */
-
 var leaderboard = [];
+
+function getLeaders() {
+	leaderboard = [];
+	for (let [key, value] of map) {
+						  //color     score      name
+		leaderboard.push([value[2], value[3], value[4]]);
+	}
+	leaderboard.sort(sortPlayer);
+}
+
+function sortPlayer(a,b) {
+    return a[1] - b[1];
+}
 
 /* End of leaderboard */
 
@@ -579,9 +585,10 @@ function continuous(id) {
 	eatFood(x, y, id);											//Eat food if available
 	for (let enemy of enemies) {								//Die if touching enemy
 		if ((enemy[1] == x) && (enemy[2] == y)) {
-			map.set(id, [(COLS / 2), (ROWS / 2), map.get(id)[2], 0]);
+			map.set(id, [(COLS / 2), (ROWS / 2), map.get(id)[2], 0, map.get(id)[4]]);
 		}
 	}
+	getLeaders();
 }
 
 //Socket setup
@@ -592,7 +599,6 @@ var map = new Map();
 io.on('connection', function(socket){               //When a connection is made, calls the function which...
     console.log('socket connected!', socket.id)     //Logs this message to console, along with the socket id of the connection
     //map.set(socket.id, [(COLS / 2) * TILE_S, (ROWS / 2) * TILE_S, (map.size % 4) + 1, 0]);
-    //console.log(map);
     //io.to(socket.id).emit('privateState', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1], score: map.get(socket.id)[3]});
     io.to(socket.id).emit('begin', {locations: mapToArray(map), grid: grid, food: foodGrid, enemies: enemies});
 
@@ -600,7 +606,7 @@ io.on('connection', function(socket){               //When a connection is made,
     setInterval(function(){
     	if (map.get(socket.id)) {
     		io.to(socket.id).emit('privateState', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1], score: map.get(socket.id)[3]});
-    		io.emit('gameState', {locations: mapToArray(map), grid: grid, food: foodGrid, enemies: enemies});
+    		io.emit('gameState', {locations: mapToArray(map), grid: grid, food: foodGrid, enemies: enemies, leaderboard: leaderboard});
     		continuous(socket.id);
     	}
 	},100);

@@ -2,8 +2,8 @@
 var socket = io.connect('http://localhost:4000');	//Uses the io interface to connect as a socket to localhost:4000
 
 //Query DOM -- This is where all of the functionality of client side of the app happens
-	wrapper = document.getElementById('wrapper'),
-    name = document.getElementById('name'),
+var	wrapper = document.getElementById('wrapper'),
+    color1 = document.getElementById('color1'),
     color = document.getElementById('color'),
     play = document.getElementById('play');
 
@@ -104,9 +104,23 @@ function drawEnemy(i, j, canvasi, canvasj) {
 
 /* End of enemies */
 
+/* Leaderboard */
+var leaderboard = [];
+
+function drawLeaderBoard() {
+    ctx.font = "20px Arial";
+    ctx.fillStyle = 'rgb(64, 64, 64)';
+    ctx.fillText('Leaderboard', 0.9 * canvas.width, 30);
+    for (i = 0; i < Math.min(10, leaderboard.length); i++) {
+        ctx.fillText(leaderboard[i][2] + '   ' + leaderboard[i][1], 0.9 * canvas.width, (i + 2) * 30);
+    }
+}
+
+/* End of leaderboard */
+
 play.addEventListener('click', function() {      //Adds an event listener on button that when pressed, emits the message and handle to server
     socket.emit('begin', {
-        name: name.value,
+        name: color1.value,
         color: color.value
     });
     wrapper.parentNode.removeChild(wrapper);
@@ -121,6 +135,7 @@ socket.on('privateState', function(data) {
 socket.on('gameState', function(data) {
     grid = data.grid;
     foodGrid = data.food;
+    leaderboard = data.leaderboard;
     for (var i = 0; i < blankPlayerGrid.length; i++) {
         playerGrid[i] = blankPlayerGrid[i].slice();
     }
@@ -226,6 +241,9 @@ function drawAll() {
     ctx.font = "30px Arial";
     ctx.strokeText('Score: ' + score, 10, 30);
 
+    // Draw the leaderboard
+    drawLeaderBoard();
+
 }
 
 //This method is a helper to make the REAL rendering less disgusting
@@ -236,19 +254,7 @@ function drawMaze (leftb, rightb, upb, downb, i, j) {
         for (j = Math.floor(upb / TILE_S); j < Math.floor(downb / TILE_S); j++) {
 
             //Draw the walls
-            ctx.fillStyle = 'rgb(105, 105, 105)';
-            if(grid[i][j][0]) {
-                ctx.fillRect(canvasi * TILE_S, canvasj * TILE_S, 1, TILE_S);
-            }
-            if(grid[i][j][1]) {
-                ctx.fillRect(canvasi * TILE_S, canvasj * TILE_S, TILE_S, 1);
-            }
-            if(grid[i][j][2]) {
-                ctx.fillRect(canvasi * TILE_S + (TILE_S - 1), canvasj * TILE_S, 1, TILE_S);
-            }
-            if(grid[i][j][3]) {
-                ctx.fillRect(canvasi * TILE_S, canvasj * TILE_S + (TILE_S - 1), TILE_S, 1);
-            }
+            drawMazeTile(i, j, canvasi, canvasj);
 
             //Draw the food
             drawFood(i, j, canvasi, canvasj);
@@ -258,7 +264,6 @@ function drawMaze (leftb, rightb, upb, downb, i, j) {
 
             //Draw the player
             drawPlayer(i, j, canvasi, canvasj);
-
             canvasj++;
         }
         canvasj = 0;
