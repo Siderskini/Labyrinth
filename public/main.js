@@ -118,6 +118,20 @@ function drawLeaderBoard() {
 
 /* End of leaderboard */
 
+/* Items */
+
+var itemGrid;
+var items;
+
+function drawItem(i, j, canvasi, canvasj) {
+    if (itemGrid[i][j]) {
+        ctx.fillStyle = 'rgb(64, 64, 64)';
+        ctx.fillRect(canvasi * TILE_S + (1 * TILE_S / 4), canvasj * TILE_S + (1 * TILE_S / 4), TILE_S / 2, TILE_S / 2);
+    }
+}
+
+/* End of Items */
+
 play.addEventListener('click', function() {      //Adds an event listener on button that when pressed, emits the message and handle to server
     socket.emit('begin', {
         name: color1.value,
@@ -130,12 +144,14 @@ socket.on('privateState', function(data) {
     playerx = data.playerx;
     playery = data.playery;
     score = data.score;
+    items = data.items;
 });
 
 socket.on('gameState', function(data) {
     grid = data.grid;
     foodGrid = data.food;
     leaderboard = data.leaderboard;
+    itemGrid = data.items;
     for (var i = 0; i < blankPlayerGrid.length; i++) {
         playerGrid[i] = blankPlayerGrid[i].slice();
     }
@@ -153,6 +169,8 @@ socket.on('gameState', function(data) {
 socket.on('begin', function(data) {
     grid = data.grid;
     foodGrid = data.food;
+    leaderboard = data.leaderboard;
+    itemGrid = data.items;
     for (var i = 0; i < blankPlayerGrid.length; i++) {
         playerGrid[i] = blankPlayerGrid[i].slice();
     }
@@ -258,6 +276,9 @@ function drawMaze (leftb, rightb, upb, downb, i, j) {
 
             //Draw the food
             drawFood(i, j, canvasi, canvasj);
+
+            //Draw the item
+            drawItem(i, j, canvasi, canvasj);
 
             //Draw the enemies
             drawEnemy(i, j, canvasi, canvasj);

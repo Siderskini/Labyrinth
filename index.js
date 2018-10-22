@@ -146,7 +146,7 @@ function mapToArray(map) {
 }
 
 function updateTile(player) {
-    if (isDeadEnd(player)) {
+    if (isDeadEnd(player[0], player[1])) {
         var playerx = player[0];
         var playery = player[1];
         if ((playerx > 0) && (playery > 0) && (playerx < (ROWS - 1)) && (playery < (COLS - 1))) { //If it's not a border tile
@@ -201,10 +201,8 @@ function getTile(player) {
     return grid[playerx][playery];
 }
 
-function isDeadEnd(player) {
-    var playerx = player[0];
-    var playery = player[1];
-    return grid[playerx][playery].reduce(add, 0) == 3;
+function isDeadEnd(x, y) {
+    return grid[x][y].reduce(add, 0) == 3;
 }
 
 function add(a, b) {
@@ -274,7 +272,9 @@ var foodGrid = new Array(COLS);
 for (i = 0; i < COLS; i++) {
     foodGrid[i] = new Array(ROWS);
     for (j = 0; j < ROWS; j++) {
-        foodGrid[i][j] = true;
+    	if (!isDeadEnd(i, j)) {
+        	foodGrid[i][j] = true;
+    	}
     }
 }
 
@@ -282,6 +282,7 @@ for (i = 0; i < COLS; i++) {
 function eatFood(x, y, id) {
 	if (foodGrid[x][y]) {
 		foodGrid[x][y] = false;
+		//map.get(id)[3]++;
 		map.set(id, [map.get(id)[0], map.get(id)[1], map.get(id)[2], map.get(id)[3] + 1, map.get(id)[4]]); //Increase score by 1 for eating a food
 		setTimeout(function(){
 			foodGrid[x][y] = true;
@@ -335,7 +336,7 @@ createSafeZone ([COLS / 2 - 4, ROWS / 2 - 4], 8, 8);
 
 /* The end of safe zones */
 
-/* The beginning of powerups */
+/* The beginning of items */
 
 var itemGrid = new Array(COLS);
 for (i = 0; i < COLS; i++) {
@@ -350,8 +351,34 @@ function placeItem(x, y, item) {
 	foodGrid[i][j] = false;
 }
 
+function useItem(id, item) {
+	console.log(map.get(id)[4] + " used an item.");
+}
 
-/* The end of maze modification */
+function collectItem(x, y, id) {
+	if (itemGrid[x][y]) {
+		switch(itemGrid[x][y]) {
+			case "powers":
+				itemGrid[x][y] = null;
+				map.get(id)[5] = [1];
+				setTimeout(function(){
+					itemGrid[x][y] = "powers";
+				},300000);
+				break;
+			default:
+				console.log("Illegitimate item collected.");
+				break;
+		}
+	}
+}
+
+for (i = 0; i < ROWS; i+=ROWS/8) {
+	for (j = 0; j < COLS; j+=COLS/8) {
+		placeItem(i, j, "powers");
+	}
+}
+
+/* The end of items */
 
 
 /* The beginning of enemies
@@ -560,7 +587,7 @@ var leaderboard = [];
 function getLeaders() {
 	leaderboard = [];
 	for (let [key, value] of map) {
-						  //color     score      name
+						  //color    score      name
 		leaderboard.push([value[2], value[3], value[4]]);
 	}
 	leaderboard.sort(sortPlayer);
@@ -577,6 +604,7 @@ function afterMove(id) {
 		y = map.get(id)[1];
 	updateTile(map.get(id));
 	eatFood(x, y, id);
+	collectItem(x, y, id);
 }
 
 function continuous(id) {
@@ -594,32 +622,50 @@ function continuous(id) {
 //Socket setup
 var io = socket(server);                //Sets up an io variable by calling socket on the server (?)
 
+/*
+0 - x
+	- The x grid coordinate of the player
+1 - y
+	- The y grid coordinate of the player
+2 - color
+	- The color of the player
+3 - score
+	- The score of the player
+4 - name
+	- The nickname of the player
+5 - items
+	- The items that a player has
+	- Items are stored as number arrays so that powerups are the first number, and collectibles are the remaining as such:
+		- 0 - Current Powerup (limited to 1)
+		- 1 - Collectible 1 (DNE)
+		- 2 - Collectible 2 (DNE), etc
+*/
 var map = new Map();
 
 io.on('connection', function(socket){               //When a connection is made, calls the function which...
     console.log('socket connected!', socket.id)     //Logs this message to console, along with the socket id of the connection
     //map.set(socket.id, [(COLS / 2) * TILE_S, (ROWS / 2) * TILE_S, (map.size % 4) + 1, 0]);
     //io.to(socket.id).emit('privateState', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1], score: map.get(socket.id)[3]});
-    io.to(socket.id).emit('begin', {locations: mapToArray(map), grid: grid, food: foodGrid, enemies: enemies});
+    io.to(socket.id).emit('begin', {locations: mapToArray(map), grid: grid, food: foodGrid, enemies: enemies, leaderboard: leaderboard, items: itemGrid});
 
     //Handles continuous events, including emitting gameState to client
     setInterval(function(){
     	if (map.get(socket.id)) {
-    		io.to(socket.id).emit('privateState', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1], score: map.get(socket.id)[3]});
-    		io.emit('gameState', {locations: mapToArray(map), grid: grid, food: foodGrid, enemies: enemies, leaderboard: leaderboard});
+    		io.to(socket.id).emit('privateState', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1], score: map.get(socket.id)[3], items: map.get(socket.id)[5]});
+    		io.emit('gameState', {locations: mapToArray(map), grid: grid, food: foodGrid, enemies: enemies, leaderboard: leaderboard, items: itemGrid});
     		continuous(socket.id);
     	}
 	},100);
 
     socket.on('begin', function(data) {
-    	map.set(socket.id, [(COLS / 2), (ROWS / 2), data.color, 0, data.name]);
-    	io.to(socket.id).emit('privateState', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1], score: map.get(socket.id)[3]});
+    	map.set(socket.id, [(COLS / 2), (ROWS / 2), data.color, 0, data.name, [0]]);
+    	io.to(socket.id).emit('privateState', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1], score: map.get(socket.id)[3], items: map.get(socket.id)[5]});
     });
 
     socket.on('W', function(){                      //When socket gets a W event from a client...
         if (map.get(socket.id) && !getTile(map.get(socket.id))[1]) {
             if (map.get(socket.id)[1] > 0) {
-                map.set(socket.id, [map.get(socket.id)[0], map.get(socket.id)[1] - 1, map.get(socket.id)[2], map.get(socket.id)[3], map.get(socket.id)[4]]);
+                map.set(socket.id, [map.get(socket.id)[0], map.get(socket.id)[1] - 1, map.get(socket.id)[2], map.get(socket.id)[3], map.get(socket.id)[4], map.get(socket.id)[5]]);
                 afterMove(socket.id);
             }
         }
@@ -628,7 +674,7 @@ io.on('connection', function(socket){               //When a connection is made,
     socket.on('A', function(){                      //When socket gets an A event from a client...
         if (map.get(socket.id) && !getTile(map.get(socket.id))[0]) {
             if (map.get(socket.id)[0] > 0) {
-                map.set(socket.id, [map.get(socket.id)[0] - 1, map.get(socket.id)[1], map.get(socket.id)[2], map.get(socket.id)[3], map.get(socket.id)[4]]);
+                map.set(socket.id, [map.get(socket.id)[0] - 1, map.get(socket.id)[1], map.get(socket.id)[2], map.get(socket.id)[3], map.get(socket.id)[4], map.get(socket.id)[5]]);
                 afterMove(socket.id);
             }
         }
@@ -637,7 +683,7 @@ io.on('connection', function(socket){               //When a connection is made,
     socket.on('S', function(){                      //When socket gets an S event from a client...
         if (map.get(socket.id) && !getTile(map.get(socket.id))[3]) {
             if (map.get(socket.id)[1] < (ROWS - 1)) {
-                map.set(socket.id, [map.get(socket.id)[0], map.get(socket.id)[1] + 1, map.get(socket.id)[2], map.get(socket.id)[3], map.get(socket.id)[4]]);
+                map.set(socket.id, [map.get(socket.id)[0], map.get(socket.id)[1] + 1, map.get(socket.id)[2], map.get(socket.id)[3], map.get(socket.id)[4], map.get(socket.id)[5]]);
                 afterMove(socket.id);
             }
         }
@@ -646,7 +692,7 @@ io.on('connection', function(socket){               //When a connection is made,
     socket.on('D', function(){                      //When socket gets a D event from a client...
         if (map.get(socket.id) && !getTile(map.get(socket.id))[2]) {
             if (map.get(socket.id)[0] < (COLS - 1)) {
-                map.set(socket.id, [map.get(socket.id)[0] + 1, map.get(socket.id)[1], map.get(socket.id)[2], map.get(socket.id)[3], map.get(socket.id)[4]]);
+                map.set(socket.id, [map.get(socket.id)[0] + 1, map.get(socket.id)[1], map.get(socket.id)[2], map.get(socket.id)[3], map.get(socket.id)[4], map.get(socket.id)[5]]);
                 afterMove(socket.id);
             }
         }
