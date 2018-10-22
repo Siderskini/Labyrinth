@@ -282,8 +282,8 @@ for (i = 0; i < COLS; i++) {
 function eatFood(x, y, id) {
 	if (foodGrid[x][y]) {
 		foodGrid[x][y] = false;
-		//map.get(id)[3]++;
-		map.set(id, [map.get(id)[0], map.get(id)[1], map.get(id)[2], map.get(id)[3] + 1, map.get(id)[4]]); //Increase score by 1 for eating a food
+		map.get(id)[3]++;
+		//map.set(id, [map.get(id)[0], map.get(id)[1], map.get(id)[2], map.get(id)[3] + 1, map.get(id)[4]]); //Increase score by 1 for eating a food
 		setTimeout(function(){
 			foodGrid[x][y] = true;
 		},30000);
@@ -360,6 +360,7 @@ function collectItem(x, y, id) {
 		switch(itemGrid[x][y]) {
 			case "powers":
 				itemGrid[x][y] = null;
+				map.get(id)[3] += 5;
 				map.get(id)[5] = [1];
 				setTimeout(function(){
 					itemGrid[x][y] = "powers";
@@ -374,7 +375,9 @@ function collectItem(x, y, id) {
 
 for (i = 0; i < ROWS; i+=ROWS/8) {
 	for (j = 0; j < COLS; j+=COLS/8) {
-		placeItem(i, j, "powers");
+		if (!safeGrid[i][j]) {
+			placeItem(i, j, "powers");
+		}
 	}
 }
 
@@ -613,7 +616,7 @@ function continuous(id) {
 	eatFood(x, y, id);											//Eat food if available
 	for (let enemy of enemies) {								//Die if touching enemy
 		if ((enemy[1] == x) && (enemy[2] == y)) {
-			map.set(id, [(COLS / 2), (ROWS / 2), map.get(id)[2], 0, map.get(id)[4]]);
+			map.set(id, [(COLS / 2), (ROWS / 2), map.get(id)[2], 0, map.get(id)[4], [0]]);
 		}
 	}
 	getLeaders();
@@ -665,7 +668,8 @@ io.on('connection', function(socket){               //When a connection is made,
     socket.on('W', function(){                      //When socket gets a W event from a client...
         if (map.get(socket.id) && !getTile(map.get(socket.id))[1]) {
             if (map.get(socket.id)[1] > 0) {
-                map.set(socket.id, [map.get(socket.id)[0], map.get(socket.id)[1] - 1, map.get(socket.id)[2], map.get(socket.id)[3], map.get(socket.id)[4], map.get(socket.id)[5]]);
+            	map.get(socket.id)[1]--;
+                //map.set(socket.id, [map.get(socket.id)[0], map.get(socket.id)[1] - 1, map.get(socket.id)[2], map.get(socket.id)[3], map.get(socket.id)[4], map.get(socket.id)[5]]);
                 afterMove(socket.id);
             }
         }
@@ -674,7 +678,8 @@ io.on('connection', function(socket){               //When a connection is made,
     socket.on('A', function(){                      //When socket gets an A event from a client...
         if (map.get(socket.id) && !getTile(map.get(socket.id))[0]) {
             if (map.get(socket.id)[0] > 0) {
-                map.set(socket.id, [map.get(socket.id)[0] - 1, map.get(socket.id)[1], map.get(socket.id)[2], map.get(socket.id)[3], map.get(socket.id)[4], map.get(socket.id)[5]]);
+            	map.get(socket.id)[0]--;
+                //map.set(socket.id, [map.get(socket.id)[0] - 1, map.get(socket.id)[1], map.get(socket.id)[2], map.get(socket.id)[3], map.get(socket.id)[4], map.get(socket.id)[5]]);
                 afterMove(socket.id);
             }
         }
@@ -683,7 +688,8 @@ io.on('connection', function(socket){               //When a connection is made,
     socket.on('S', function(){                      //When socket gets an S event from a client...
         if (map.get(socket.id) && !getTile(map.get(socket.id))[3]) {
             if (map.get(socket.id)[1] < (ROWS - 1)) {
-                map.set(socket.id, [map.get(socket.id)[0], map.get(socket.id)[1] + 1, map.get(socket.id)[2], map.get(socket.id)[3], map.get(socket.id)[4], map.get(socket.id)[5]]);
+            	map.get(socket.id)[1]++;
+                //map.set(socket.id, [map.get(socket.id)[0], map.get(socket.id)[1] + 1, map.get(socket.id)[2], map.get(socket.id)[3], map.get(socket.id)[4], map.get(socket.id)[5]]);
                 afterMove(socket.id);
             }
         }
@@ -692,7 +698,8 @@ io.on('connection', function(socket){               //When a connection is made,
     socket.on('D', function(){                      //When socket gets a D event from a client...
         if (map.get(socket.id) && !getTile(map.get(socket.id))[2]) {
             if (map.get(socket.id)[0] < (COLS - 1)) {
-                map.set(socket.id, [map.get(socket.id)[0] + 1, map.get(socket.id)[1], map.get(socket.id)[2], map.get(socket.id)[3], map.get(socket.id)[4], map.get(socket.id)[5]]);
+            	map.get(socket.id)[0]++;
+                //map.set(socket.id, [map.get(socket.id)[0] + 1, map.get(socket.id)[1], map.get(socket.id)[2], map.get(socket.id)[3], map.get(socket.id)[4], map.get(socket.id)[5]]);
                 afterMove(socket.id);
             }
         }
