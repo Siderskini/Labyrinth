@@ -385,7 +385,7 @@ function setBomb(x, y) {
 function detonateBomb(x, y) {
 	console.log("BOOM");
 	for (let [id, player] of map) {
-		if (distance(map.get(id), [x, y]) < 2) {
+		if (distance(map.get(id), [x, y]) < 3) {
 			map.set(id, [(COLS / 2), (ROWS / 2), map.get(id)[2], 0, map.get(id)[4], [0, 0, 0]]);
 		}
 	}
