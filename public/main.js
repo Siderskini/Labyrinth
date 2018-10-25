@@ -52,6 +52,9 @@ function keyDownHandler(event) {
         case "D":
             socket.emit('D');
             break;
+        case "E":
+            socket.emit('E');
+            break;
     }
 }
 
