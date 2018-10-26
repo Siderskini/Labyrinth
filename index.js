@@ -196,9 +196,9 @@ function openWall(x, y, wall){
 }
 
 function getTile(player) {
-    var playerx = player[0];
-    var playery = player[1];
-    return grid[playerx][playery];
+    var x = player[0];
+    var y = player[1];
+    return grid[x][y];
 }
 
 function isDeadEnd(x, y) {
@@ -363,7 +363,7 @@ function useItem(id, item) {
 			break;
 		case "key":
 			if (map.get(id)[5][2]) {
-				useKey();
+				useKey(map.get(id)[0], map.get(id)[1]);
 			} else {
 				console.log("No keys!");
 			}
@@ -374,7 +374,19 @@ function useItem(id, item) {
 	}
 }
 
-function useKey() {
+function useKey(x, y) {
+	var temp = getTile([x, y]).slice();
+	openWall(x, y, 0);
+	openWall(x, y, 1);
+	openWall(x, y, 2);
+	openWall(x, y, 3);
+	setTimeout(function(){
+		for (i = 0; i < 4; i++) {
+			if (temp[i]) {
+				closeWall(x, y, i);
+			}
+		}
+	},3000);
 	console.log("Used a key!");
 }
 
