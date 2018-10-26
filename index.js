@@ -362,7 +362,7 @@ function useItem(id, item) {
 			}
 			break;
 		case "key":
-			if (map.get(id)[5][1]) {
+			if (map.get(id)[5][2]) {
 				useKey();
 			} else {
 				console.log("No keys!");
@@ -390,6 +390,12 @@ function detonateBomb(x, y, radius) {
 			for (let [id, player] of map) {
 				if ((map.get(id)[0] == i) && (map.get(id)[1] == j)) {
 					map.set(id, [(COLS / 2), (ROWS / 2), map.get(id)[2], 0, map.get(id)[4], [0, 0, 0]]);
+				}
+			}
+			for (let enemy of enemies) {
+				if ((enemy[1] == i) && (enemy[2] == j)) {
+					enemy[1] = 1;
+					enemy[2] = 1;
 				}
 			}
 			setTimeout(function() {
