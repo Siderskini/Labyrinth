@@ -374,8 +374,12 @@ function useItem(id, item) {
 	}
 }
 
+function useKey() {
+	console.log("Used a key!");
+}
+
 function setBomb(x, y) {
-	placeItem(x, y, "BOMB");
+	placeItem(x, y, "comb");
 	setTimeout(function(){
 		itemGrid[x][y] = null;
 		detonateBomb(x, y, 1);
@@ -425,12 +429,12 @@ function overItem(x, y, id) {
 					itemGrid[x][y] = "bomb";
 				},300000);
 				break;
-			case "trap":
+			case "key":
 				itemGrid[x][y] = null;
 				map.get(id)[3] += 3;
 				map.get(id)[5][2]++;
 				setTimeout(function(){
-					itemGrid[x][y] = "trap";
+					itemGrid[x][y] = "key";
 				},300000);
 				break;	
 			default:
@@ -443,7 +447,11 @@ function overItem(x, y, id) {
 for (i = 0; i < ROWS; i+=ROWS/8) {
 	for (j = 0; j < COLS; j+=COLS/8) {
 		if (!safeGrid[i][j]) {
-			placeItem(i, j, "bomb");
+			if ((i == j) || (i == (ROWS - j))) {
+				placeItem(i, j, "key");
+			} else {
+				placeItem(i, j, "bomb");
+			}
 		}
 	}
 }
@@ -779,6 +787,10 @@ io.on('connection', function(socket){               //When a connection is made,
     socket.on('E', function() {
     	useItem(socket.id, "bomb");
     });
+
+	socket.on('Q', function() {
+    	useItem(socket.id, "key");
+    });    
 
     socket.on('disconnect', function(){
         map.delete(socket.id);

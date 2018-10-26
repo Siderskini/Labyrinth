@@ -55,6 +55,9 @@ function keyDownHandler(event) {
         case "E":
             socket.emit('E');
             break;
+        case "Q":
+            socket.emit('Q');
+            break;
     }
 }
 
@@ -132,15 +135,22 @@ function drawItem(i, j, canvasi, canvasj) {
             case "bomb":
                 ctx.fillStyle = 'rgb(64, 64, 64)';
                 ctx.fillRect(canvasi * TILE_S + (1 * TILE_S / 4), canvasj * TILE_S + (1 * TILE_S / 4), TILE_S / 2, TILE_S / 2);
+                ctx.fillStyle = 'rgb(128, 128, 128)';
+                ctx.fillRect(canvasi * TILE_S + (7 * TILE_S / 16), canvasj * TILE_S + (TILE_S / 8), TILE_S / 8, TILE_S / 8);
                 break;
-            case "BOMB":
+            case "comb":
                 ctx.fillStyle = 'rgb(64, 64, 64)';
                 ctx.fillRect(canvasi * TILE_S + (1 * TILE_S / 4), canvasj * TILE_S + (1 * TILE_S / 4), TILE_S / 2, TILE_S / 2);
+                ctx.fillStyle = 'rgb(255, 255, 0)';
+                ctx.fillRect(canvasi * TILE_S + (7 * TILE_S / 16), canvasj * TILE_S + (TILE_S / 8), TILE_S / 8, TILE_S / 8);
                 break;
             case "boom":
                 ctx.fillStyle = 'rgb(128, 128, 64, 0.5)';
                 ctx.fillRect(canvasi * TILE_S, canvasj * TILE_S, TILE_S, TILE_S);
                 break;
+            case "key":
+                ctx.fillStyle = 'rgb(128, 128, 128)';
+                ctx.fillRect(canvasi * TILE_S + (7 * TILE_S / 16), canvasj * TILE_S + (TILE_S / 8), TILE_S / 8, 3 * TILE_S / 4);
             default:
                 break;
         }
