@@ -128,8 +128,22 @@ var items;
 
 function drawItem(i, j, canvasi, canvasj) {
     if (itemGrid[i][j]) {
-        ctx.fillStyle = 'rgb(64, 64, 64)';
-        ctx.fillRect(canvasi * TILE_S + (1 * TILE_S / 4), canvasj * TILE_S + (1 * TILE_S / 4), TILE_S / 2, TILE_S / 2);
+        switch(itemGrid[i][j]) {
+            case "bomb":
+                ctx.fillStyle = 'rgb(64, 64, 64)';
+                ctx.fillRect(canvasi * TILE_S + (1 * TILE_S / 4), canvasj * TILE_S + (1 * TILE_S / 4), TILE_S / 2, TILE_S / 2);
+                break;
+            case "BOMB":
+                ctx.fillStyle = 'rgb(64, 64, 64)';
+                ctx.fillRect(canvasi * TILE_S + (1 * TILE_S / 4), canvasj * TILE_S + (1 * TILE_S / 4), TILE_S / 2, TILE_S / 2);
+                break;
+            case "boom":
+                ctx.fillStyle = 'rgb(128, 128, 64, 0.5)';
+                ctx.fillRect(canvasi * TILE_S, canvasj * TILE_S, TILE_S, TILE_S);
+                break;
+            default:
+                break;
+        }
     }
 }
 

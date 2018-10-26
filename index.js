@@ -378,16 +378,32 @@ function setBomb(x, y) {
 	placeItem(x, y, "BOMB");
 	setTimeout(function(){
 		itemGrid[x][y] = null;
-		detonateBomb(x, y);
+		detonateBomb(x, y, 1);
 	},3000);
 }
 
-function detonateBomb(x, y) {
+function detonateBomb(x, y, radius) {
 	console.log("BOOM");
-	for (let [id, player] of map) {
-		if (distance(map.get(id), [x, y]) < 3) {
-			map.set(id, [(COLS / 2), (ROWS / 2), map.get(id)[2], 0, map.get(id)[4], [0, 0, 0]]);
-		}
+	for (i = x - radius; i < x + radius + 1; i++) {
+		for (j = y - radius; j < y + radius + 1; j++) {
+			placeItem(i, j, "boom");
+			for (let [id, player] of map) {
+				if ((map.get(id)[0] == i) && (map.get(id)[1] == j)) {
+					map.set(id, [(COLS / 2), (ROWS / 2), map.get(id)[2], 0, map.get(id)[4], [0, 0, 0]]);
+				}
+			}
+			setTimeout(function() {
+				afterBomb(x, y, radius);
+			},100);
+		}	
+	}
+}
+
+function afterBomb(x, y, radius) {
+	for (i = x - radius; i < x + radius + 1; i++) {
+		for (j = y - radius; j < y + radius + 1; j++) {
+			placeItem(i, j, null);
+		}	
 	}
 }
 
