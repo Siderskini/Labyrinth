@@ -160,37 +160,59 @@ function updateTile(player) {
 }
 
 function closeWall(x, y, wall){
-    grid[x][y][wall] = true;
     switch (wall) {
         case 0:
-            grid[x - 1][y][2] = true;
+        	if (x > 0) {
+        		grid[x][y][wall] = true;
+            	grid[x - 1][y][2] = true;
+        	}
             break;
         case 1:
-            grid[x][y - 1][3] = true;
+        	if (y > 0) {
+        		grid[x][y][wall] = true;
+            	grid[x][y - 1][3] = true;
+        	}
             break;
         case 2:
-            grid[x + 1][y][0] = true;
+        	if (x < COLS - 1) {
+        		grid[x][y][wall] = true;
+            	grid[x + 1][y][0] = true;
+        	}
             break;
         case 3:
-            grid[x][y + 1][1] = true;
+        	if (y < ROWS - 1) {
+        		grid[x][y][wall] = true;
+            	grid[x][y + 1][1] = true;
+            }
             break;
     }
 }
 
 function openWall(x, y, wall){
-    grid[x][y][wall] = false;
     switch (wall) {
         case 0:
-            grid[x - 1][y][2] = false;
+        	if (x) {
+        		grid[x][y][wall] = false;
+            	grid[x - 1][y][2] = false;
+        	}
             break;
         case 1:
-            grid[x][y - 1][3] = false;
+        	if (y) {
+        		grid[x][y][wall] = false;
+            	grid[x][y - 1][3] = false;
+        	}
             break;
         case 2:
-            grid[x + 1][y][0] = false;
+        	if (x < COLS - 1) {
+        		grid[x][y][wall] = false;
+            	grid[x + 1][y][0] = false;
+        	}
             break;
         case 3:
-            grid[x][y + 1][1] = false;
+        	if (y < ROWS - 1) {
+        		grid[x][y][wall] = false;
+            	grid[x][y + 1][1] = false;
+            }
             break;
     }
 }
@@ -357,15 +379,12 @@ function useItem(id, item) {
 			if (map.get(id)[5][1]) {
 				map.get(id)[5][1]--;
 				setBomb(map.get(id)[0], map.get(id)[1]);
-			} else {
-				console.log("No bombs!");
 			}
 			break;
 		case "key":
 			if (map.get(id)[5][2]) {
+				map.get(id)[5][2]--;
 				useKey(map.get(id)[0], map.get(id)[1]);
-			} else {
-				console.log("No keys!");
 			}
 			break;
 		default:
@@ -387,7 +406,6 @@ function useKey(x, y) {
 			}
 		}
 	},3000);
-	console.log("Used a key!");
 }
 
 function setBomb(x, y) {
@@ -399,32 +417,35 @@ function setBomb(x, y) {
 }
 
 function detonateBomb(x, y, radius) {
-	console.log("BOOM");
 	for (i = x - radius; i < x + radius + 1; i++) {
 		for (j = y - radius; j < y + radius + 1; j++) {
-			placeItem(i, j, "boom");
-			for (let [id, player] of map) {
-				if ((map.get(id)[0] == i) && (map.get(id)[1] == j)) {
-					map.set(id, [(COLS / 2), (ROWS / 2), map.get(id)[2], 0, map.get(id)[4], [0, 0, 0]]);
+			if (grid[i] && grid[i][j]) {
+				placeItem(i, j, "boom");
+				for (let [id, player] of map) {
+					if ((map.get(id)[0] == i) && (map.get(id)[1] == j)) {
+						map.set(id, [(COLS / 2), (ROWS / 2), map.get(id)[2], 0, map.get(id)[4], [0, 0, 0]]);
+					}
+				}
+				for (let enemy of enemies) {
+					if ((enemy[1] == i) && (enemy[2] == j)) {
+						enemy[1] = 1;
+						enemy[2] = 1;
+					}
 				}
 			}
-			for (let enemy of enemies) {
-				if ((enemy[1] == i) && (enemy[2] == j)) {
-					enemy[1] = 1;
-					enemy[2] = 1;
-				}
-			}
-			setTimeout(function() {
-				afterBomb(x, y, radius);
-			},100);
 		}	
 	}
+	setTimeout(function() {
+		afterBomb(x, y, radius);
+	},100);
 }
 
 function afterBomb(x, y, radius) {
 	for (i = x - radius; i < x + radius + 1; i++) {
 		for (j = y - radius; j < y + radius + 1; j++) {
-			placeItem(i, j, null);
+			if (grid[i] && grid[i][j]) {
+				placeItem(i, j, null);
+			}
 		}	
 	}
 }
@@ -436,7 +457,6 @@ function overItem(x, y, id) {
 				itemGrid[x][y] = null;
 				map.get(id)[3] += 5;
 				map.get(id)[5][1]++;
-				console.log("Bombs: ", map.get(id)[5][1]);
 				setTimeout(function(){
 					itemGrid[x][y] = "bomb";
 				},300000);
@@ -511,7 +531,7 @@ for (i = 4; i < COLS; i += 4) {
 for (i = 0; i < COLS; i += 4) {
 	for (j = 0; j < ROWS; j += 4) {
 		if (!safeGrid[i][j]) {
-			enemies.push(['smarty', i, j]);
+			//enemies.push(['smarty', i, j]);
 		}
 	}
 }

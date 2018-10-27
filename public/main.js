@@ -116,9 +116,9 @@ var leaderboard = [];
 function drawLeaderBoard() {
     ctx.font = "20px Arial";
     ctx.fillStyle = 'rgb(64, 64, 64)';
-    ctx.fillText('Leaderboard', 0.9 * canvas.width, 30);
+    ctx.fillText('Leaderboard', canvas.width - 3 * TILE_S + 30, 30);
     for (i = 0; i < Math.min(10, leaderboard.length); i++) {
-        ctx.fillText(leaderboard[i][2] + '   ' + leaderboard[i][1], 0.9 * canvas.width, (i + 2) * 30);
+        ctx.fillText(leaderboard[i][2] + '   ' + leaderboard[i][1], canvas.width - 3 * TILE_S + 30, (i + 2) * 30);
     }
 }
 
@@ -127,7 +127,7 @@ function drawLeaderBoard() {
 /* Items */
 
 var itemGrid;
-var items;
+var items = [0, 0, 0];
 
 function drawItem(i, j, canvasi, canvasj) {
     if (itemGrid[i][j]) {
@@ -172,6 +172,7 @@ socket.on('privateState', function(data) {
     playery = data.playery;
     score = data.score;
     items = data.items;
+    console.log(items);
 });
 
 socket.on('gameState', function(data) {
@@ -247,48 +248,57 @@ function drawAll() {
 
     //The beginning of REAL rendering
     var canvasi = 0,
-        canvasj = 0;
-    if (playerx * TILE_S < canvas.width/2) {
+        canvasj = 0,
+        rightMargin = 3; //Set the right margin for HUD in # of Tiles
+        mainw = canvas.width - rightMargin * TILE_S;
+        mainh = canvas.height;
+        
+    if (playerx * TILE_S < mainw/2) {
         if (playery * TILE_S < canvas.height/2) {                                                                            //Player is in Area 1
-            drawMaze (0, canvas.width, 0, canvas.height);     //Renders the maze
+            drawMaze (0, mainw, 0, canvas.height);     //Renders the maze
         }
         else if (playery * TILE_S > maze_h - canvas.height/2) {                                                               //Player is in Area 2
-            drawMaze (0, canvas.width, maze_h - canvas.height, maze_h);     //Renders the maze
+            drawMaze (0, mainw, maze_h - canvas.height, maze_h);     //Renders the maze
         }
         else {                                                                                                        //Player is in Area 3
-            drawMaze (0, canvas.width, (playery * TILE_S - canvas.height/2), (playery * TILE_S + canvas.height/2));
+            drawMaze (0, mainw, (playery * TILE_S - canvas.height/2), (playery * TILE_S + canvas.height/2));
         }
     }
-    else if (playerx * TILE_S > maze_w - canvas.width/2) {
+    else if (playerx * TILE_S > maze_w - mainw/2) {
         if (playery * TILE_S < canvas.height/2) {                                                                              //Player is in Area 4
-            drawMaze (maze_w - canvas.width, maze_w, 0, canvas.height);
+            drawMaze (maze_w - mainw, maze_w, 0, canvas.height);
         }
         else if (playery * TILE_S > maze_h - canvas.height/2) {                                                                //Player is in Area 5
-            drawMaze (maze_w - canvas.width, maze_w, maze_h - canvas.height, maze_h);
+            drawMaze (maze_w - mainw, maze_w, maze_h - canvas.height, maze_h);
         }
         else {                                                                                                        //Player is in Area 6
-            drawMaze (maze_w - canvas.width, maze_w, playery * TILE_S - canvas.height/2, playery *TILE_S + canvas.height/2);
+            drawMaze (maze_w - mainw, maze_w, playery * TILE_S - canvas.height/2, playery * TILE_S + canvas.height/2);
         }
     }
     else {
         if (playery * TILE_S < canvas.height/2) {                                                                              //Player is in Area 7
-            drawMaze (playerx * TILE_S - canvas.width/2, playerx * TILE_S + canvas.width/2, 0, canvas.height);
+            drawMaze (playerx * TILE_S - mainw/2, playerx * TILE_S + mainw/2, 0, canvas.height);
         }
         else if (playery * TILE_S > maze_h - canvas.height/2) {                                                                //Player is in Area 8
-            drawMaze (playerx * TILE_S - canvas.width/2, playerx * TILE_S + canvas.width/2, maze_h - canvas.height, maze_h);
+            drawMaze (playerx * TILE_S - mainw/2, playerx * TILE_S + mainw/2, maze_h - canvas.height, maze_h);
         }
         else {                                                                                                        //Player is in Area 9
-            drawMaze (playerx * TILE_S - canvas.width/2, playerx * TILE_S + canvas.width/2, playery * TILE_S - canvas.height/2, playery * TILE_S + canvas.height/2);
+            drawMaze (playerx * TILE_S - mainw/2, playerx * TILE_S + mainw/2, playery * TILE_S - canvas.height/2, playery * TILE_S + canvas.height/2);
         }
     }
 
     // Draw the score
-    ctx.font = "30px Arial";
-    ctx.strokeText('Score: ' + score, 10, 30);
+//    ctx.font = "30px Arial";
+//    ctx.strokeText('Score: ' + score, 10, 30);
+
+//###########################//
+//************HUD************//
+//###########################//
 
     // Draw the leaderboard
     drawLeaderBoard();
 
+    drawHUD();
 }
 
 //This method is a helper to make the REAL rendering less disgusting
@@ -342,6 +352,44 @@ function drawPlayer(i, j, canvasi, canvasj) {
         ctx.fillStyle = playerGrid[i][j];
         ctx.fillRect(canvasi * TILE_S + 2, canvasj * TILE_S + 2, TILE_S - 4, TILE_S - 4);
     }
+}
+
+function drawHUD() {
+    /*
+    ctx.font = "20px Arial";
+    ctx.fillStyle = 'rgb(64, 64, 64)';
+    ctx.fillText('Bombs: ' + items[1], canvas.width - 3 * TILE_S + 30, 330);
+    ctx.fillText('Keys: ' + items[2], canvas.width - 3 * TILE_S + 30, 360);
+    */
+    ctx.font = "20px Arial";
+    ctx.fillStyle = 'rgb(64, 64, 64)';
+    ctx.fillRect(canvas.width - 3 * TILE_S + 30 + (1 * TILE_S / 4), 330 + (1 * TILE_S / 4), TILE_S / 2, TILE_S / 2);
+    ctx.fillStyle = 'rgb(128, 128, 128)';
+    ctx.fillRect(canvas.width - 3 * TILE_S + 30 + (7 * TILE_S / 16), 330 + (TILE_S / 8), TILE_S / 8, TILE_S / 8);
+    ctx.fillStyle = 'rgb(64, 64, 64)';
+    ctx.fillText('X ' + items[1], canvas.width - 3 * TILE_S + 78, 360);
+
+    ctx.fillStyle = 'rgb(128, 128, 128)';
+    ctx.fillRect(canvas.width - 3 * TILE_S + 30 + (7 * TILE_S / 16), 378 + (TILE_S / 8), TILE_S / 8, 3 * TILE_S / 4);
+    ctx.fillStyle = 'rgb(64, 64, 64)';
+    ctx.fillText('X ' + items[2], canvas.width - 3 * TILE_S + 78, 408);
+
+    drawMiniMap();
+}
+
+function drawMiniMap() {
+    ctx.fillStyle = 'rgb(64, 64, 64)';
+    ctx.fillRect(canvas.width - 3 * TILE_S + 1, canvas.height - 1, 3 * TILE_S - 2, 1);
+    ctx.fillRect(canvas.width - 3 * TILE_S + 1, canvas.height - 3 * TILE_S + 1, 1, 3 * TILE_S - 2);
+    ctx.fillRect(canvas.width - 3 * TILE_S + 1, canvas.height - 3 * TILE_S + 1, 3 * TILE_S - 2, 1);
+    ctx.fillRect(canvas.width - 1, canvas.height - 3 * TILE_S + 1, 1, 3 * TILE_S - 2);
+    ctx.fillRect(canvas.width - 3 * TILE_S + 1 + (playerx * 3 * TILE_S / COLS), canvas.height - 3 * TILE_S + 1 + (playery * 3 * TILE_S / ROWS), 2, 2);
+    /*
+    ctx.fillRect(canvasi * TILE_S, canvasj * TILE_S, 1, TILE_S);
+    ctx.fillRect(canvasi * TILE_S, canvasj * TILE_S, TILE_S, 1);
+    ctx.fillRect(canvasi * TILE_S + (TILE_S - 1), canvasj * TILE_S, 1, TILE_S);
+    ctx.fillRect(canvasi * TILE_S, canvasj * TILE_S + (TILE_S - 1), TILE_S, 1);
+    */
 }
 
 //  Starting point for program
