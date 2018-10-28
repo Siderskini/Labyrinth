@@ -446,7 +446,7 @@ function afterBomb(x, y, radius) {
 			if (grid[i] && grid[i][j]) {
 				placeItem(i, j, null);
 			}
-		}	
+		}
 	}
 }
 
@@ -704,7 +704,7 @@ function getLeaders() {
 }
 
 function sortPlayer(a,b) {
-    return a[1] - b[1];
+    return b[1] - a[1];
 }
 
 /* End of leaderboard */
@@ -817,11 +817,15 @@ io.on('connection', function(socket){               //When a connection is made,
     });
 
     socket.on('E', function() {
-    	useItem(socket.id, "bomb");
+    	if (map.get(socket.id)) {
+    		useItem(socket.id, "bomb");
+    	}
     });
 
 	socket.on('Q', function() {
-    	useItem(socket.id, "key");
+		if (map.get(socket.id)) {
+    		useItem(socket.id, "key");
+    	}
     });    
 
     socket.on('disconnect', function(){
