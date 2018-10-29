@@ -28,6 +28,7 @@ The purpose of this document is to keep a bucket list of things that I want to d
 	- To make enemy pathfinding more efficient, I might want to make a second map with 
 	  locations mapped to players so that I can reduce runtime and make enemy 
 	  pathfinding more efficient. This might take a little bit of overhead.
+	- Give the minotaur health regen
 
 - Safe zone
 	- Players now spawn in a safe zone

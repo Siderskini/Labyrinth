@@ -7,6 +7,10 @@ var	wrapper = document.getElementById('wrapper'),
     color = document.getElementById('color'),
     play = document.getElementById('play');
 
+//Party mode?!?!
+var party = false;
+var started = false;
+
 //	Objects
 var canvas,
     ctx,
@@ -58,6 +62,11 @@ function keyDownHandler(event) {
         case "Q":
             socket.emit('Q');
             break;
+        case "P":
+            if (started) {
+                party = !party;
+            }
+            break;
     }
 }
 
@@ -92,7 +101,11 @@ var foodGrid;
 
 function drawFood(i, j, canvasi, canvasj) {
     if (foodGrid[i][j]) {
-        ctx.fillStyle = 'rgb(105, 105, 105)';
+        if (party) {
+            ctx.fillStyle = '#'+Math.floor(Math.random()*16777215).toString(16);
+        } else {
+            ctx.fillStyle = 'rgb(105, 105, 105)';
+        }
         ctx.fillRect(canvasi * TILE_S + (7 * TILE_S / 16), canvasj * TILE_S + (7 * TILE_S / 16), TILE_S / 8, TILE_S / 8);
     }
 }
@@ -159,6 +172,19 @@ function drawItem(i, j, canvasi, canvasj) {
 
 /* End of Items */
 
+/* Safezones */
+
+var safeGrid;
+
+function drawSafeZone(i, j, canvasi, canvasj) {
+    if (safeGrid[i][j]) {
+        ctx.fillStyle = '#FFB6C1';
+        ctx.fillRect(canvasi * TILE_S + 2, canvasj * TILE_S + 2, TILE_S - 4, TILE_S - 4);
+    }
+}
+
+/* End of safezones */
+
 play.addEventListener('click', function() {      //Adds an event listener on button that when pressed, emits the message and handle to server
     socket.emit('begin', {
         name: color1.value,
@@ -168,11 +194,11 @@ play.addEventListener('click', function() {      //Adds an event listener on but
 });
 
 socket.on('privateState', function(data) {
+    started = true;
     playerx = data.playerx;
     playery = data.playery;
     score = data.score;
     items = data.items;
-    console.log(items);
 });
 
 socket.on('gameState', function(data) {
@@ -180,6 +206,7 @@ socket.on('gameState', function(data) {
     foodGrid = data.food;
     leaderboard = data.leaderboard;
     itemGrid = data.items;
+    safeGrid = data.safe;
     for (var i = 0; i < blankPlayerGrid.length; i++) {
         playerGrid[i] = blankPlayerGrid[i].slice();
     }
@@ -199,6 +226,8 @@ socket.on('begin', function(data) {
     foodGrid = data.food;
     leaderboard = data.leaderboard;
     itemGrid = data.items;
+    safeGrid = data.safe;
+    console.log(safeGrid);
     for (var i = 0; i < blankPlayerGrid.length; i++) {
         playerGrid[i] = blankPlayerGrid[i].slice();
     }
@@ -311,6 +340,9 @@ function drawMaze (leftb, rightb, upb, downb, i, j) {
             //Draw the walls
             drawMazeTile(i, j, canvasi, canvasj);
 
+            //Draw safe zone
+            //drawSafeZone(i, j, canvasi, canvasj);
+
             //Draw the food
             drawFood(i, j, canvasi, canvasj);
 
@@ -331,7 +363,11 @@ function drawMaze (leftb, rightb, upb, downb, i, j) {
 }
 
 function drawMazeTile (i, j, canvasi, canvasj) {
-    ctx.fillStyle = 'rgb(105, 105, 105)';
+    if (party) {
+        ctx.fillStyle = '#'+Math.floor(Math.random()*16777215).toString(16);
+    } else {
+        ctx.fillStyle = 'rgb(105, 105, 105)';
+    }
     if(grid[i][j][0]) {
         ctx.fillRect(canvasi * TILE_S, canvasj * TILE_S, 1, TILE_S);
     }
@@ -379,11 +415,27 @@ function drawHUD() {
 
 function drawMiniMap() {
     ctx.fillStyle = 'rgb(64, 64, 64)';
+
+    //Borders of minimap
     ctx.fillRect(canvas.width - 3 * TILE_S + 1, canvas.height - 1, 3 * TILE_S - 2, 1);
     ctx.fillRect(canvas.width - 3 * TILE_S + 1, canvas.height - 3 * TILE_S + 1, 1, 3 * TILE_S - 2);
     ctx.fillRect(canvas.width - 3 * TILE_S + 1, canvas.height - 3 * TILE_S + 1, 3 * TILE_S - 2, 1);
     ctx.fillRect(canvas.width - 1, canvas.height - 3 * TILE_S + 1, 1, 3 * TILE_S - 2);
-    ctx.fillRect(canvas.width - 3 * TILE_S + 1 + (playerx * 3 * TILE_S / COLS), canvas.height - 3 * TILE_S + 1 + (playery * 3 * TILE_S / ROWS), 2, 2);
+
+    //Safe zone
+    ctx.fillStyle = '#FFB6C1';
+    for (i = 0; i < COLS; i++) {
+        for (j = 0; j < ROWS; j++) {
+            if (safeGrid[i][j]) {
+                ctx.fillRect(canvas.width - 3 * TILE_S + 1 + (i * 3 * TILE_S / COLS), canvas.height - 3 * TILE_S + 1 + (j * 3 * TILE_S / ROWS), 3, 3);
+            }
+        }
+    }
+
+    //Player
+    ctx.fillStyle = 'rgb(64, 64, 64)';
+    ctx.fillRect(canvas.width - 3 * TILE_S + 1 + (playerx * 3 * TILE_S / COLS), canvas.height - 3 * TILE_S + 1 + (playery * 3 * TILE_S / ROWS), 3, 3);
+    
     /*
     ctx.fillRect(canvasi * TILE_S, canvasj * TILE_S, 1, TILE_S);
     ctx.fillRect(canvasi * TILE_S, canvasj * TILE_S, TILE_S, 1);

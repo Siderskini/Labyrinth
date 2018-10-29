@@ -354,7 +354,10 @@ function createSafeZone(coords, length, width) {
 }
 
 //Create the safe zones
-createSafeZone ([COLS / 2 - 4, ROWS / 2 - 4], 8, 8);
+createSafeZone ([COLS / 4 - 2, ROWS / 4 - 2], 4, 4);
+createSafeZone ([3 * COLS / 4 - 2, ROWS / 4 - 2], 4, 4);
+createSafeZone ([COLS / 4 - 2, 3 * ROWS / 4 - 2], 4, 4);
+createSafeZone ([3 * COLS / 4 - 2, 3 * ROWS / 4 - 2], 4, 4);
 
 /* The end of safe zones */
 
@@ -409,27 +412,34 @@ function useKey(x, y) {
 }
 
 function setBomb(x, y) {
-	placeItem(x, y, "comb");
-	setTimeout(function(){
-		itemGrid[x][y] = null;
-		detonateBomb(x, y, 1);
-	},3000);
+	if (itemGrid[x][y] != "comb") {
+		placeItem(x, y, "comb");
+		setTimeout(function(){
+			itemGrid[x][y] = null;
+			detonateBomb(x, y, 1);
+		},3000);
+	}
 }
 
 function detonateBomb(x, y, radius) {
+	var enemy;
 	for (i = x - radius; i < x + radius + 1; i++) {
 		for (j = y - radius; j < y + radius + 1; j++) {
-			if (grid[i] && grid[i][j]) {
+			if (grid[i] && grid[i][j] && !safeGrid[i][j]) {
 				placeItem(i, j, "boom");
 				for (let [id, player] of map) {
 					if ((map.get(id)[0] == i) && (map.get(id)[1] == j)) {
-						map.set(id, [(COLS / 2), (ROWS / 2), map.get(id)[2], 0, map.get(id)[4], [0, 0, 0]]);
+						die(id);
 					}
 				}
-				for (let enemy of enemies) {
+				for (k = 0; k < enemies.length; k++) {
+					enemy = enemies[k];
 					if ((enemy[1] == i) && (enemy[2] == j)) {
+						/*
 						enemy[1] = 1;
 						enemy[2] = 1;
+						*/
+						kill(k);
 					}
 				}
 			}
@@ -531,14 +541,16 @@ for (i = 4; i < COLS; i += 4) {
 for (i = 0; i < COLS; i += 4) {
 	for (j = 0; j < ROWS; j += 4) {
 		if (!safeGrid[i][j]) {
-			//enemies.push(['smarty', i, j]);
+			enemies.push(['smarty', i, j]);
 		}
 	}
 }
 
+//Create zone for boss
+createMinotaurZone([COLS / 2 - 2, ROWS / 2 - 2], 4, 4);
 
 //Add bosses
-//enemies.push(['boss', COLS / 2, ROWS / 2]);
+enemies.push(['minotaur', COLS / 2, ROWS / 2]);
 
 function moveEnemies() {
 	for (let enemy of enemies) {
@@ -557,6 +569,41 @@ function moveEnemies() {
 				var move = getSmartMove(enemy, moves);
 				if (move == null) {
 					move = [0, 0];
+				}
+				enemy[1] += move[0];
+				enemy[2] += move[1];
+				break;
+			case 'minotaur':
+				var move = getMinotaurMove(enemy);
+				var temp = enemy.slice();
+				if (move[0] == 1) {
+					if (getTile([temp[1], temp[2]])[2]) {
+						openWall(temp[1], temp[2], 2);
+						setTimeout(function(){
+							closeWall(temp[1], temp[2], 2);
+						},1000);
+					}
+				} else if (move[1] ==1 ) {
+					if (getTile([enemy[1], enemy[2]])[3]) {
+						openWall(temp[1], temp[2], 3);
+						setTimeout(function(){
+							closeWall(temp[1], temp[2], 3);
+						},1000);
+					}
+				} else if (move[0] == -1) {
+					if (getTile([enemy[1], enemy[2]])[0]) {
+						openWall(temp[1], temp[2], 0);
+						setTimeout(function(){
+							closeWall(temp[1], temp[2], 0);
+						},1000);
+					}
+				} else if (move[1] == -1) {
+					if (getTile([enemy[1], enemy[2]])[1]) {
+						openWall(temp[1], temp[2], 1);
+						setTimeout(function(){
+							closeWall(temp[1], temp[2], 1);
+						},1000);
+					}
 				}
 				enemy[1] += move[0];
 				enemy[2] += move[1];
@@ -689,6 +736,102 @@ function distance(a, b) {
 	return Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]);
 }
 
+function createMinotaurZone(coords, length, width) {
+	for (i = coords[0]; i < coords[0] + width; i++) {
+		openWall(i, coords[1], 0);
+		openWall(i, coords[1], 3);
+		openWall(i, coords[1], 2);
+		foodGrid[i][coords[1]] = false;
+		openWall(i, coords[1] + length, 0);
+		openWall(i, coords[1] + length, 1);
+		openWall(i, coords[1] + length, 2);
+		foodGrid[i][coords[1] + length] = false;
+	}
+	for (j = coords[1]; j < coords[1] + length; j++) {
+		openWall(coords[0], j, 1);
+		openWall(coords[0], j, 2);
+		openWall(coords[0], j, 3);
+		foodGrid[coords[0]][j] = false;
+		openWall(coords[0] + width, j, 0);
+		openWall(coords[0] + width, j, 1);
+		openWall(coords[0] + width, j, 3);
+		foodGrid[coords[0] + width][j] = false;
+	}
+
+	for (i = coords[0] + 1; i < coords[0] + width; i++) {
+		for (j = coords[1] + 1; j < coords[1] + length; j++) {
+			grid[i][j] = [false, false, false, false];
+			foodGrid[i][j] = false;
+		}
+	}
+}
+
+function getMinotaurMove(enemy) {
+	var target = [enemy[1], enemy[2]];
+	var maxScore = -1;
+	for (let [key, value] of map) {
+		if (value[3] > maxScore) {
+			maxScore = value[3];
+			target = [value[0], value[1]];
+		}
+	}
+	return vectorToMove([target[0] - enemy[1], target[1] - enemy[2]], minoMoves(enemy[1], enemy[2]));
+}
+
+function vectorToMove(vector, moves) {
+	var closest = [0, 0];
+	var dist = distance(vector, closest);
+	for (let move of moves) {
+		if (distance(vector, move) < dist) {
+			dist = distance(vector, move);
+			closest = move;
+		}
+	}
+	return closest;
+}
+
+function minoMoves(x, y) {
+	var tile = getTile([x, y]);
+	moves = [];
+	if (!safeGrid[x - 1][y]) {
+		moves.push([-1, 0]);
+	}
+	if (!safeGrid[x][y - 1]) {
+		moves.push([0, -1]);
+	}
+	if (!safeGrid[x + 1][y]) {
+		moves.push([1, 0]);
+	}
+	if (!safeGrid[x][y + 1]) {
+		moves.push([0, 1]);
+	}
+	return moves;
+}
+
+function kill(index) {
+	var temp = enemies[index].slice();
+	enemies.splice(index, 1);
+	switch (temp[0]) {
+		case 'mob':
+			setTimeout(function(){
+				enemies.push(temp.slice());
+			},30000);
+			break;
+		case 'smarty':
+			setTimeout(function(){
+				enemies.push(temp.slice());
+			},30000);
+			break;
+		case 'minotaur':
+			temp[1] = COLS / 2;
+			temp[2] = ROWS / 2;
+			setTimeout(function(){
+				enemies.push(temp.slice());
+			},30000);
+			break;
+	}
+}
+
 /* The end of enemies */
 
 /* Leaderboard */
@@ -709,6 +852,48 @@ function sortPlayer(a,b) {
 
 /* End of leaderboard */
 
+/* Death */
+
+//Counts players per quadrants and returns the quadrant to spawn in
+function spawnLocation() {
+	var counter = [0, 0, 0, 0];
+	for (let [key, value] of map) {
+  		if(value[0] < COLS / 2){
+  			if(value[1] < ROWS / 2){
+  				counter[1]++;
+  			} else {
+  				counter[2]++;
+  			}
+  		} else {
+  			if(value[1] < ROWS / 2){
+  				counter[0]++;
+  			} else {
+  				counter[3]++;
+  			}
+  		}
+	}
+	return counter.indexOf(Math.min(...counter));
+}
+
+function die(id) {
+	switch(spawnLocation()) {
+		case 0:
+			map.set(id, [3 * (COLS / 4), (ROWS / 4), map.get(id)[2], 0, map.get(id)[4], [0, 0, 0]]);
+			break;
+		case 1:
+			map.set(id, [(COLS / 4), (ROWS / 4), map.get(id)[2], 0, map.get(id)[4], [0, 0, 0]]);
+			break;
+		case 2:
+			map.set(id, [(COLS / 4), 3 * (ROWS / 4), map.get(id)[2], 0, map.get(id)[4], [0, 0, 0]]);
+			break;
+		case 3:
+			map.set(id, [3 * (COLS / 4), 3 * (ROWS / 4), map.get(id)[2], 0, map.get(id)[4], [0, 0, 0]]);
+			break;
+	}
+}
+
+/* End of death */
+
 function afterMove(id) {
 	var x = map.get(id)[0],
 		y = map.get(id)[1];
@@ -723,7 +908,7 @@ function continuous(id) {
 	eatFood(x, y, id);											//Eat food if available
 	for (let enemy of enemies) {								//Die if touching enemy
 		if ((enemy[1] == x) && (enemy[2] == y)) {
-			map.set(id, [(COLS / 2), (ROWS / 2), map.get(id)[2], 0, map.get(id)[4], [0, 0, 0]]);
+			die(id);
 		}
 	}
 	getLeaders();
@@ -756,13 +941,13 @@ io.on('connection', function(socket){               //When a connection is made,
     console.log('socket connected!', socket.id)     //Logs this message to console, along with the socket id of the connection
     //map.set(socket.id, [(COLS / 2) * TILE_S, (ROWS / 2) * TILE_S, (map.size % 4) + 1, 0]);
     //io.to(socket.id).emit('privateState', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1], score: map.get(socket.id)[3]});
-    io.to(socket.id).emit('begin', {locations: mapToArray(map), grid: grid, food: foodGrid, enemies: enemies, leaderboard: leaderboard, items: itemGrid});
+    io.to(socket.id).emit('begin', {locations: mapToArray(map), grid: grid, food: foodGrid, enemies: enemies, leaderboard: leaderboard, items: itemGrid, safe: safeGrid});
 
     //Handles continuous events, including emitting gameState to client
     setInterval(function(){
     	if (map.get(socket.id)) {
     		io.to(socket.id).emit('privateState', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1], score: map.get(socket.id)[3], items: map.get(socket.id)[5]});
-    		io.emit('gameState', {locations: mapToArray(map), grid: grid, food: foodGrid, enemies: enemies, leaderboard: leaderboard, items: itemGrid});
+    		io.emit('gameState', {locations: mapToArray(map), grid: grid, food: foodGrid, enemies: enemies, leaderboard: leaderboard, items: itemGrid, safe: safeGrid});
     	}
 	},100);
 	setInterval(function(){
@@ -772,7 +957,21 @@ io.on('connection', function(socket){               //When a connection is made,
     },10);
 
     socket.on('begin', function(data) {
-    	map.set(socket.id, [(COLS / 2), (ROWS / 2), data.color, 0, data.name, [0, 0, 0]]);
+    	switch(spawnLocation()) {
+			case 0:
+				map.set(socket.id, [3 * (COLS / 4), (ROWS / 4), data.color, 0, data.name, [0, 0, 0]]);
+				break;
+			case 1:
+				map.set(socket.id, [(COLS / 4), (ROWS / 4), data.color, 0, data.name, [0, 0, 0]]);
+				break;
+			case 2:
+				map.set(socket.id, [(COLS / 4), 3 * (ROWS / 4), data.color, 0, data.name, [0, 0, 0]]);
+				break;
+			case 3:
+				map.set(socket.id, [3 * (COLS / 4), 3 * (ROWS / 4), data.color, 0, data.name, [0, 0, 0]]);
+				break;
+		}
+    	//map.set(socket.id, [(COLS / 4), (ROWS / 4), data.color, 0, data.name, [0, 0, 0]]);
     	io.to(socket.id).emit('privateState', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1], score: map.get(socket.id)[3], items: map.get(socket.id)[5]});
     });
 
