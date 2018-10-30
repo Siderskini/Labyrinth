@@ -222,7 +222,7 @@ socket.on('gameState', function(data) {
         playerGrid[i] = blankPlayerGrid[i].slice();
     }
 	for (let value of data.locations) {
-        playerGrid[value[0]][value[1]] = value[2];
+        playerGrid[value[0]][value[1]] = [value[2], value[4]];
 	}
     for (var i = 0; i < blankPlayerGrid.length; i++) {
         enemyGrid[i] = blankPlayerGrid[i].slice();
@@ -396,7 +396,9 @@ function drawMazeTile (i, j, canvasi, canvasj) {
 //Player drawing for REAL rendering
 function drawPlayer(i, j, canvasi, canvasj) {
     if (playerGrid[i][j]) {
-        ctx.fillStyle = playerGrid[i][j];
+        //ctx.fillStyle = 'rgb(64, 64, 64)';
+        //ctx.fillText(playerGrid[i][j][1], canvasi * TILE_S + 2, canvasj * TILE_S);
+        ctx.fillStyle = playerGrid[i][j][0];
         ctx.fillRect(canvasi * TILE_S + 2, canvasj * TILE_S + 2, TILE_S - 4, TILE_S - 4);
     }
 }
