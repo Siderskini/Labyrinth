@@ -116,7 +116,17 @@ var enemyGrid = [];
 
 function drawEnemy(i, j, canvasi, canvasj) {
     if (enemyGrid[i][j]) {
-        ctx.fillStyle = 'rgb(255, 0, 0)';
+        switch(enemyGrid[i][j]) {
+            case 'mob':
+                ctx.fillStyle = 'rgb(173, 255, 47)';
+                break;
+            case 'smarty':
+                ctx.fillStyle = 'rgb(255, 0, 0)';
+                break;
+            case 'minotaur':
+                ctx.fillStyle = 'rgb(0, 0, 0)';
+                break;
+        }
         ctx.fillRect(canvasi * TILE_S + (3 * TILE_S / 8), canvasj * TILE_S + (3 * TILE_S / 8), TILE_S / 4, TILE_S / 4);
     }
 }
@@ -131,6 +141,7 @@ function drawLeaderBoard() {
     ctx.fillStyle = 'rgb(64, 64, 64)';
     ctx.fillText('Leaderboard', canvas.width - 3 * TILE_S + 30, 30);
     for (i = 0; i < Math.min(10, leaderboard.length); i++) {
+        ctx.fillStyle = leaderboard[i][0];
         ctx.fillText(leaderboard[i][2] + '   ' + leaderboard[i][1], canvas.width - 3 * TILE_S + 30, (i + 2) * 30);
     }
 }
@@ -217,7 +228,7 @@ socket.on('gameState', function(data) {
         enemyGrid[i] = blankPlayerGrid[i].slice();
     }
     for (let enemy of data.enemies) {
-        enemyGrid[enemy[1]][enemy[2]] = 1;
+        enemyGrid[enemy[1]][enemy[2]] = enemy[0];
     }
 });
 
@@ -238,7 +249,7 @@ socket.on('begin', function(data) {
         enemyGrid[i] = blankPlayerGrid[i].slice();
     }
     for (let enemy of data.enemies) {
-        enemyGrid[enemy[1]][enemy[2]] = 1;
+        enemyGrid[enemy[1]][enemy[2]] = enemy[0];
     }
 	main();
 });
