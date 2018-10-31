@@ -1,4 +1,5 @@
 //Imports (?)
+var fs = require('fs');
 var express = require('express');       //Sets up a callable express variable
 var socket = require('socket.io');      //Sets up a callable socket variable
 
@@ -15,15 +16,21 @@ app.use(express.static('public'));      //Uses files in folder public as static 
 var COLS = 48,
     ROWS = 48;
 
+//An array storing the valuex zero to three
 var zeroToThree = [0, 1, 2, 3];
 
 //The grid itself
-var grid = new Array(COLS);
-for (i = 0; i < COLS; i++) {
-    grid[i] = new Array(ROWS);
-    for (j = 0; j < ROWS; j++) {
-        grid[i][j] = [true, true, true, true];
-    }
+var grid;
+
+//Initializes maze grid with all walls
+function createGrid() {
+	grid = new Array(COLS);
+	for (i = 0; i < COLS; i++) {
+   		grid[i] = new Array(ROWS);
+    	for (j = 0; j < ROWS; j++) {
+    	    grid[i][j] = [true, true, true, true];
+    	}
+   	}
 }
 
 /* Adapted from https://www.geeksforgeeks.org/implementation-priority-queue-javascript/ */
@@ -159,7 +166,7 @@ function updateTile(player) {
     }
 }
 
-function closeWall(x, y, wall){
+function closeWall(x, y, wall) {
     switch (wall) {
         case 0:
         	if (x > 0) {
@@ -231,7 +238,7 @@ function add(a, b) {
     return a + b;
 }
 
-function createMaze(grid, playerx, playery) {
+function createMaze(playerx, playery) {
     var queue = [];                             //Initializes an array to use as the fringe queue
     var visited = [];                           //Initializes an array to track the tiles that have been visited
     var temp = [playerx, playery];              //Creates a temprary variable to track the current tile with initial player coords
@@ -250,6 +257,17 @@ function createMaze(grid, playerx, playery) {
             queue.unshift(temp);
         }
     }
+}
+
+//Takes a saved maze grid and loads it
+function loadTestGrid(file) {
+	var data = fs.readFileSync('file.json');
+	grid = JSON.parse(data).grid;
+}
+
+//Saves a made maze to a file for testing
+function saveMazeGrid() {
+	console.log(JSON.stringify({grid: grid}));
 }
 
 function arrayContains(array, element) {
@@ -278,7 +296,34 @@ function unvisitedNeighbors(playerx, playery, visited) {
     return neighbors;                                                                   //Return the list of unvisited neighbors
 }
 
-createMaze(grid, ROWS/2, COLS/2);
+function tileExists(x, y) {
+	return grid[x] && grid[x][y];
+}
+/*
+'test' - load test maze
+'printNew' - print new random maze
+default - create new random maze
+*/
+function main(args) {
+
+	//Create the maze
+	switch(args) {
+		case 'test':
+			loadTestGrid('file.txt');
+			break;
+		case 'printNew':
+			createGrid();
+			createMaze(ROWS/2, COLS/2);
+			saveMazeGrid();
+			break;
+		default:
+			createGrid();
+			createMaze(ROWS/2, COLS/2);
+			break;
+	}
+}
+
+main();
 
 //////////////////////////////////////////////
 //##########################################//
@@ -621,16 +666,16 @@ setInterval(function(){
 function realMoves(x, y) {
 	var tile = getTile([x, y]);
 	moves = [];
-	if (!tile[0] && !safeGrid[x - 1][y]) {
+	if (tileExists(x - 1, y) && !tile[0] && !safeGrid[x - 1][y]) {
 		moves.push([-1, 0]);
 	}
-	if (!tile[1] && !safeGrid[x][y - 1]) {
+	if (tileExists(x, y - 1) && !tile[1] && !safeGrid[x][y - 1]) {
 		moves.push([0, -1]);
 	}
-	if (!tile[2] && !safeGrid[x + 1][y]) {
+	if (tileExists(x + 1, y) && !tile[2] && !safeGrid[x + 1][y]) {
 		moves.push([1, 0]);
 	}
-	if (!tile[3] && !safeGrid[x][y + 1]) {
+	if (tileExists(x, y + 1) && !tile[3] && !safeGrid[x][y + 1]) {
 		moves.push([0, 1]);
 	}
 	return moves;
