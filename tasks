@@ -23,8 +23,8 @@ The purpose of this document is to keep a bucket list of things that I want to d
 	- There is currently a randomwalk mob called 'mob'
 	- There are now low level intelligence mobs called 'smarty's that have limited UCS
 	  playerfinding algorithms
-	- Eventually I want to make a very intelligent mob called 'boss' with supreme
-	  intelligence, but idk how to make this happen
+	- There is now a minotaur mob, and it's not invincible, but I want to make it 
+	  invincible
 	- To make enemy pathfinding more efficient, I might want to make a second map with 
 	  locations mapped to players so that I can reduce runtime and make enemy 
 	  pathfinding more efficient. This might take a little bit of overhead.
@@ -37,7 +37,7 @@ The purpose of this document is to keep a bucket list of things that I want to d
 	- There is no food in the safe zone
 
 - Items
-	- There are bombs that kill players and tp enemies to 1,1
+	- There are bombs that kill players and enemies
 	- There are keys which temporarily open all the walls of a tile
 	- Want to implement main item which is not consumable and maybe recharges
 

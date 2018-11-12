@@ -19,6 +19,16 @@ var canvas,
     playerGrid,
     blankPlayerGrid;
 
+// Images
+keyImage = new Image();
+keyImage.src = "textures/key.png";
+bombImage = new Image();
+bombImage.src = "textures/bomb.png";
+combImage = new Image();
+combImage.src = "textures/comb.png";
+smartyImage = new Image();
+smartyImage.src = "textures/smarty.png";
+
 //	Grid variables
 var TILE_S = 48,
     COLS = 48,
@@ -119,15 +129,17 @@ function drawEnemy(i, j, canvasi, canvasj) {
         switch(enemyGrid[i][j]) {
             case 'mob':
                 ctx.fillStyle = 'rgb(173, 255, 47)';
+                ctx.fillRect(canvasi * TILE_S + (3 * TILE_S / 8), canvasj * TILE_S + (3 * TILE_S / 8), TILE_S / 4, TILE_S / 4);
                 break;
             case 'smarty':
-                ctx.fillStyle = 'rgb(255, 0, 0)';
+                //ctx.fillStyle = 'rgb(255, 0, 0)';
+                ctx.drawImage(smartyImage, canvasi * TILE_S, canvasj * TILE_S);
                 break;
             case 'minotaur':
                 ctx.fillStyle = 'rgb(0, 0, 0)';
+                ctx.fillRect(canvasi * TILE_S + (3 * TILE_S / 8), canvasj * TILE_S + (3 * TILE_S / 8), TILE_S / 4, TILE_S / 4);
                 break;
         }
-        ctx.fillRect(canvasi * TILE_S + (3 * TILE_S / 8), canvasj * TILE_S + (3 * TILE_S / 8), TILE_S / 4, TILE_S / 4);
     }
 }
 
@@ -157,24 +169,28 @@ function drawItem(i, j, canvasi, canvasj) {
     if (itemGrid[i][j]) {
         switch(itemGrid[i][j]) {
             case "bomb":
-                ctx.fillStyle = 'rgb(64, 64, 64)';
-                ctx.fillRect(canvasi * TILE_S + (1 * TILE_S / 4), canvasj * TILE_S + (1 * TILE_S / 4), TILE_S / 2, TILE_S / 2);
-                ctx.fillStyle = 'rgb(128, 128, 128)';
-                ctx.fillRect(canvasi * TILE_S + (7 * TILE_S / 16), canvasj * TILE_S + (TILE_S / 8), TILE_S / 8, TILE_S / 8);
+                //ctx.fillStyle = 'rgb(64, 64, 64)';
+                //ctx.fillRect(canvasi * TILE_S + (1 * TILE_S / 4), canvasj * TILE_S + (1 * TILE_S / 4), TILE_S / 2, TILE_S / 2);
+                //ctx.fillStyle = 'rgb(128, 128, 128)';
+                //ctx.fillRect(canvasi * TILE_S + (7 * TILE_S / 16), canvasj * TILE_S + (TILE_S / 8), TILE_S / 8, TILE_S / 8);
+                ctx.drawImage(bombImage, canvasi * TILE_S, canvasj * TILE_S);
                 break;
             case "comb":
-                ctx.fillStyle = 'rgb(64, 64, 64)';
-                ctx.fillRect(canvasi * TILE_S + (1 * TILE_S / 4), canvasj * TILE_S + (1 * TILE_S / 4), TILE_S / 2, TILE_S / 2);
-                ctx.fillStyle = 'rgb(255, 255, 0)';
-                ctx.fillRect(canvasi * TILE_S + (7 * TILE_S / 16), canvasj * TILE_S + (TILE_S / 8), TILE_S / 8, TILE_S / 8);
+                //ctx.fillStyle = 'rgb(64, 64, 64)';
+                //ctx.fillRect(canvasi * TILE_S + (1 * TILE_S / 4), canvasj * TILE_S + (1 * TILE_S / 4), TILE_S / 2, TILE_S / 2);
+                //ctx.fillStyle = 'rgb(255, 255, 0)';
+                //ctx.fillRect(canvasi * TILE_S + (7 * TILE_S / 16), canvasj * TILE_S + (TILE_S / 8), TILE_S / 8, TILE_S / 8);
+                ctx.drawImage(combImage, canvasi * TILE_S, canvasj * TILE_S);
                 break;
             case "boom":
                 ctx.fillStyle = 'rgb(128, 128, 64, 0.5)';
                 ctx.fillRect(canvasi * TILE_S, canvasj * TILE_S, TILE_S, TILE_S);
                 break;
             case "key":
-                ctx.fillStyle = 'rgb(128, 128, 128)';
-                ctx.fillRect(canvasi * TILE_S + (7 * TILE_S / 16), canvasj * TILE_S + (TILE_S / 8), TILE_S / 8, 3 * TILE_S / 4);
+                //ctx.fillStyle = 'rgb(128, 128, 128)';
+                //ctx.fillRect(canvasi * TILE_S + (7 * TILE_S / 16), canvasj * TILE_S + (TILE_S / 8), TILE_S / 8, 3 * TILE_S / 4);
+                ctx.drawImage(keyImage, canvasi * TILE_S, canvasj * TILE_S);
+                break;
             default:
                 break;
         }
@@ -411,16 +427,19 @@ function drawHUD() {
     ctx.fillText('Keys: ' + items[2], canvas.width - 3 * TILE_S + 30, 360);
     */
     ctx.font = "20px Arial";
+
+    //Bomb stuff
     ctx.fillStyle = 'rgb(64, 64, 64)';
-    ctx.fillRect(canvas.width - 3 * TILE_S + 30 + (1 * TILE_S / 4), 330 + (1 * TILE_S / 4), TILE_S / 2, TILE_S / 2);
-    ctx.fillStyle = 'rgb(128, 128, 128)';
-    ctx.fillRect(canvas.width - 3 * TILE_S + 30 + (7 * TILE_S / 16), 330 + (TILE_S / 8), TILE_S / 8, TILE_S / 8);
-    ctx.fillStyle = 'rgb(64, 64, 64)';
+    //ctx.fillRect(canvas.width - 3 * TILE_S + 30 + (1 * TILE_S / 4), 330 + (1 * TILE_S / 4), TILE_S / 2, TILE_S / 2);
+    //ctx.fillStyle = 'rgb(128, 128, 128)';
+    //ctx.fillRect(canvas.width - 3 * TILE_S + 30 + (7 * TILE_S / 16), 330 + (TILE_S / 8), TILE_S / 8, TILE_S / 8);
+    //ctx.fillStyle = 'rgb(64, 64, 64)';
+    ctx.drawImage(bombImage, canvas.width - 3 * TILE_S + 16 + (7 * TILE_S / 16), 324 + (TILE_S / 8));
     ctx.fillText('X ' + items[1], canvas.width - 3 * TILE_S + 78, 360);
 
-    ctx.fillStyle = 'rgb(128, 128, 128)';
-    ctx.fillRect(canvas.width - 3 * TILE_S + 30 + (7 * TILE_S / 16), 378 + (TILE_S / 8), TILE_S / 8, 3 * TILE_S / 4);
-    ctx.fillStyle = 'rgb(64, 64, 64)';
+    //Key stuff
+    ctx.drawImage(keyImage, canvas.width - 3 * TILE_S + 16 + (7 * TILE_S / 16), 368 + (TILE_S / 8));
+    //ctx.fillStyle = 'rgb(64, 64, 64)';
     ctx.fillText('X ' + items[2], canvas.width - 3 * TILE_S + 78, 408);
 
     drawMiniMap();
