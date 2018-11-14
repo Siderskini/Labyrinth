@@ -838,16 +838,16 @@ function vectorToMove(vector, moves) {
 function minoMoves(x, y) {
 	var tile = getTile([x, y]);
 	moves = [];
-	if (!safeGrid[x - 1][y]) {
+	if (tileExists(x - 1, y) && !safeGrid[x - 1][y]) {
 		moves.push([-1, 0]);
 	}
-	if (!safeGrid[x][y - 1]) {
+	if (tileExists(x, y - 1) && !safeGrid[x][y - 1]) {
 		moves.push([0, -1]);
 	}
-	if (!safeGrid[x + 1][y]) {
+	if (tileExists(x + 1, y) && !safeGrid[x + 1][y]) {
 		moves.push([1, 0]);
 	}
-	if (!safeGrid[x][y + 1]) {
+	if (tileExists(x, y + 1) && !safeGrid[x][y + 1]) {
 		moves.push([0, 1]);
 	}
 	return moves;

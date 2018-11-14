@@ -5,7 +5,8 @@ var socket = io.connect('http://localhost:4000');	//Uses the io interface to con
 var	wrapper = document.getElementById('wrapper'),
     color1 = document.getElementById('color1'),
     color = document.getElementById('color'),
-    play = document.getElementById('play');
+    play = document.getElementById('play'),
+    help = document.getElementById('help');
 
 //Party mode?!?!
 var party = false;
@@ -28,6 +29,8 @@ combImage = new Image();
 combImage.src = "textures/comb.png";
 smartyImage = new Image();
 smartyImage.src = "textures/smarty.png";
+bossImage = new Image();
+bossImage.src = "textures/minotaur.png";
 
 //	Grid variables
 var TILE_S = 48,
@@ -133,11 +136,13 @@ function drawEnemy(i, j, canvasi, canvasj) {
                 break;
             case 'smarty':
                 //ctx.fillStyle = 'rgb(255, 0, 0)';
+                //ctx.fillRect(canvasi * TILE_S + (3 * TILE_S / 8), canvasj * TILE_S + (3 * TILE_S / 8), TILE_S / 4, TILE_S / 4);
                 ctx.drawImage(smartyImage, canvasi * TILE_S, canvasj * TILE_S);
                 break;
             case 'minotaur':
-                ctx.fillStyle = 'rgb(0, 0, 0)';
-                ctx.fillRect(canvasi * TILE_S + (3 * TILE_S / 8), canvasj * TILE_S + (3 * TILE_S / 8), TILE_S / 4, TILE_S / 4);
+                //ctx.fillStyle = 'rgb(0, 0, 0)';
+                //ctx.fillRect(canvasi * TILE_S + (3 * TILE_S / 8), canvasj * TILE_S + (3 * TILE_S / 8), TILE_S / 4, TILE_S / 4);
+                ctx.drawImage(bossImage, canvasi * TILE_S, canvasj * TILE_S);
                 break;
         }
     }
@@ -218,6 +223,21 @@ play.addEventListener('click', function() {      //Adds an event listener on but
         color: color.value
     });
     wrapper.parentNode.removeChild(wrapper);
+});
+
+help.addEventListener('click', function() {    //Adds event listener for the help button
+    //wrapper.parentNode.removeChild(wrapper);
+    var halp = document.createElement("DIV");
+    halp.style.cssText = "position: absolute; left: 45%; top: 45%; width:200px; height:100px; background-color: #EEEEEE;";
+    var back = document.createElement("button");
+    var backText = document.createTextNode("Back");
+    back.appendChild(backText);
+    document.body.appendChild(back);
+
+    back.addEventListener('click', function() {
+        //halp.parentNode.removeChild(halp);
+        back.parentNode.removeChild(back);
+    });
 });
 
 socket.on('privateState', function(data) {
