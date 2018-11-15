@@ -261,7 +261,7 @@ function createMaze(playerx, playery) {
 
 //Takes a saved maze grid and loads it
 function loadTestGrid(file) {
-	var data = fs.readFileSync('file.json');
+	var data = fs.readFileSync(file + '.json');
 	grid = JSON.parse(data).grid;
 }
 
@@ -309,7 +309,7 @@ function main(args) {
 	//Create the maze
 	switch(args) {
 		case 'test':
-			loadTestGrid('file.txt');
+			loadTestGrid('file');
 			break;
 		case 'printNew':
 			createGrid();

@@ -227,16 +227,23 @@ play.addEventListener('click', function() {      //Adds an event listener on but
 
 help.addEventListener('click', function() {    //Adds event listener for the help button
     //wrapper.parentNode.removeChild(wrapper);
-    var halp = document.createElement("DIV");
-    halp.style.cssText = "position: absolute; left: 45%; top: 45%; width:200px; height:100px; background-color: #EEEEEE;";
+    canvas.style.display = "none";
+    wrapper.style.display = "none";
+    var halp = document.createElement("img");
+    //halp.style.cssText = "position: absolute; left: 45%; top: 45%; width:200px; height:100px; background-color: #EEEEEE;";
+    halp.src = "textures/instructions.png";
+    halp.align = "top";
     var back = document.createElement("button");
     var backText = document.createTextNode("Back");
     back.appendChild(backText);
+    document.body.appendChild(halp);
     document.body.appendChild(back);
 
     back.addEventListener('click', function() {
-        //halp.parentNode.removeChild(halp);
+        halp.parentNode.removeChild(halp);
         back.parentNode.removeChild(back);
+        canvas.style.display = "block";
+        wrapper.style.display = "block";
     });
 });
 
