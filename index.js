@@ -534,11 +534,18 @@ function overItem(x, y, id) {
 for (i = 0; i < ROWS; i+=ROWS/8) {
 	for (j = 0; j < COLS; j+=COLS/8) {
 		if (!safeGrid[i][j]) {
+			if ((i - j) % (ROWS/4) == 0) {
+				placeItem(i, j, "key");
+			} else {
+				placeItem(i, j, "bomb");
+			}
+			/*
 			if ((i == j) || (i == (ROWS - j))) {
 				placeItem(i, j, "key");
 			} else {
 				placeItem(i, j, "bomb");
 			}
+			*/
 		}
 	}
 }
