@@ -928,6 +928,11 @@ function spawnLocation() {
 }
 
 function die(id) {
+	io.to(id).emit('dead', {score: map.get(id)[3]});
+	respawn(id);
+}
+
+function respawn(id) {
 	switch(spawnLocation()) {
 		case 0:
 			map.set(id, [3 * (COLS / 4), (ROWS / 4), map.get(id)[2], 0, map.get(id)[4], [0, 0, 0]]);
@@ -1081,5 +1086,9 @@ io.on('connection', function(socket){               //When a connection is made,
 
     socket.on('disconnect', function(){
         map.delete(socket.id);
+    });
+
+    socket.on('respawn', function(){
+    	respawn(socket.id);
     });
 });

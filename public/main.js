@@ -56,30 +56,30 @@ for (i = 0; i < COLS; i++) {
 //Functions
 function keyDownHandler(event) {
     var key = String.fromCharCode(event.keyCode);
-    switch (key) {
-        case "W":
-            socket.emit('W');
-            break;
-        case "S" :
-            socket.emit('S');
-            break;
-        case "A":
-            socket.emit('A');
-            break;
-        case "D":
-            socket.emit('D');
-            break;
-        case "E":
-            socket.emit('E');
-            break;
-        case "Q":
-            socket.emit('Q');
-            break;
-        case "P":
-            if (started) {
+    if (started) {
+        switch (key) {
+            case "W":
+                socket.emit('W');
+                break;
+            case "S" :
+                socket.emit('S');
+                break;
+            case "A":
+                socket.emit('A');
+                break;
+            case "D":
+                socket.emit('D');
+                break;
+            case "E":
+                socket.emit('E');
+                break;
+            case "Q":
+                socket.emit('Q');
+                break;
+            case "P":
                 party = !party;
-            }
-            break;
+                break;
+        }
     }
 }
 
@@ -223,6 +223,7 @@ play.addEventListener('click', function() {      //Adds an event listener on but
         color: color.value
     });
     wrapper.parentNode.removeChild(wrapper);
+    started = true;
 });
 
 help.addEventListener('click', function() {    //Adds event listener for the help button
@@ -248,7 +249,6 @@ help.addEventListener('click', function() {    //Adds event listener for the hel
 });
 
 socket.on('privateState', function(data) {
-    started = true;
     playerx = data.playerx;
     playery = data.playery;
     score = data.score;
@@ -281,7 +281,6 @@ socket.on('begin', function(data) {
     leaderboard = data.leaderboard;
     itemGrid = data.items;
     safeGrid = data.safe;
-    console.log(safeGrid);
     for (var i = 0; i < blankPlayerGrid.length; i++) {
         playerGrid[i] = blankPlayerGrid[i].slice();
     }
@@ -295,6 +294,28 @@ socket.on('begin', function(data) {
         enemyGrid[enemy[1]][enemy[2]] = enemy[0];
     }
 	main();
+});
+
+socket.on('dead', function(data) {  //Called when a player dies
+    started = false;
+    canvas.style.display = "none";
+    var panel = document.createElement("div");
+    panel.style.cssText = "position: absolute; left: 45%; top: 45%; width:200px; height:100px; background-color: #FFB6C1; font-size: 24px; font-family: sans-serif;";
+    scoreText = "Your score is: " + data.score;
+    panel.innerHTML = scoreText;
+    var respawn = document.createElement("button");
+    var respawnText = document.createTextNode("Play Again");
+    respawn.appendChild(respawnText);
+    document.body.appendChild(panel);
+    panel.appendChild(respawn);
+
+    respawn.addEventListener('click', function() {
+        panel.parentNode.removeChild(panel);
+        respawn.parentNode.removeChild(respawn);
+        canvas.style.display = "block";
+        socket.emit('respawn');
+        started = true;
+    });
 });
 
 //  Initialize the canvas and context
