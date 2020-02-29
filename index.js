@@ -557,14 +557,14 @@ for (i = 0; i < ROWS; i+=ROWS/8) {
 	I want one main enemy to be the minotaur, which represents a kind of "final boss"
 	Current enemy types:
 		- mob:
-		  Mobs are the regular piece of shit monsters that love to give everyone trouble without regard for their own life.
+		  Mobs are the regular piece of shit monsters that love to give everyone trouble without regard for their own lives.
 		  They are usually weak and stupid and use randomwalk to go places.
 		- smartys:
 		  Smartys are the more intelligent mobs that strategize to end players' lives.
 		  They might use heuristics and algorithms to find players.
 		- bosses:
-		  Bosses, such as the feared minotaur are smartys but they also must have unique powers that make them hard to defeat.
-		  Since this is meant to be a collaborative game, bosses must be IMPOSSIBLE for players to kill, or maybe just impossible to kill. 
+		  Bosses, such as the feared minotaur are smartys but they also have unique powers that make them hard to defeat.
+		  Since this is meant to be a collaborative game, bosses must be IMPOSSIBLE for single players to kill, or maybe just impossible to kill. 
 		  To lure some of the better players in, it's important for the boss to maintain the illusion of being killable by one person/ a 
 		  few people.
 		  I really want the death of the boss to be a cooperative effort, and not just a small-scale cooperative effort, but one
@@ -718,6 +718,11 @@ function getSmartMove(enemy, moves) {
 		}
 	}
 	if (map.size) {
+        depth = 4
+        //If there are no players in range then randomwalk
+        if (dist > depth) {
+            return moves[Math.floor((Math.random() * moves.length))];
+        }
 		var directions = aStarSearch([enemy[1], enemy[2]], closest, 4);
 		if (directions == null) {
 			return moves[Math.floor((Math.random() * moves.length))];

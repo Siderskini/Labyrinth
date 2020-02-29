@@ -135,13 +135,9 @@ function drawEnemy(i, j, canvasi, canvasj) {
                 ctx.fillRect(canvasi * TILE_S + (3 * TILE_S / 8), canvasj * TILE_S + (3 * TILE_S / 8), TILE_S / 4, TILE_S / 4);
                 break;
             case 'smarty':
-                //ctx.fillStyle = 'rgb(255, 0, 0)';
-                //ctx.fillRect(canvasi * TILE_S + (3 * TILE_S / 8), canvasj * TILE_S + (3 * TILE_S / 8), TILE_S / 4, TILE_S / 4);
                 ctx.drawImage(smartyImage, canvasi * TILE_S, canvasj * TILE_S);
                 break;
             case 'minotaur':
-                //ctx.fillStyle = 'rgb(0, 0, 0)';
-                //ctx.fillRect(canvasi * TILE_S + (3 * TILE_S / 8), canvasj * TILE_S + (3 * TILE_S / 8), TILE_S / 4, TILE_S / 4);
                 ctx.drawImage(bossImage, canvasi * TILE_S, canvasj * TILE_S);
                 break;
         }
