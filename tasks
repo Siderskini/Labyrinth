@@ -1,9 +1,5 @@
 The purpose of this document is to keep a bucket list of things that I want to do to make the app less buggy and more fun to play
 
-- Keypress handling
-	- Need to treat all keypresses as keyholds for more fluid movement
-	- Currently, when a directional key is held, an initial keypress is registered and 	  then after a delay, this changes to a keyhold event. I want to bypass the delay.
-
 - Rendering
 	- The client side crashes if the maze is smaller than window size (large window or
 	  zoomed out)
@@ -47,10 +43,3 @@ The purpose of this document is to keep a bucket list of things that I want to d
 
 - Have started to create textures
 	- Want to create a texture for the player, so that the player is not the only remaining rectangle
-
-- Recently created instructions
-	- Want to center the instructions pic and maybe modify the back button
-
-- Want to make a screen that displays score upon death and asks if the player wants to play again
-
-

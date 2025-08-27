@@ -471,7 +471,7 @@ function drawPlayer(i, j, canvasi, canvasj) {
         //ctx.fillStyle = 'rgb(64, 64, 64)';
         //ctx.fillText(playerGrid[i][j][1], canvasi * TILE_S + 2, canvasj * TILE_S);
         ctx.fillStyle = playerGrid[i][j][0];
-        ctx.fillRect(canvasi * TILE_S + 2, canvasj * TILE_S + 2, TILE_S - 4, TILE_S - 4);
+        ctx.fillRect(canvasi * TILE_S + 4, canvasj * TILE_S + 4, TILE_S - 8, TILE_S - 8);
     }
 }
 
