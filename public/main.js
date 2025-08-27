@@ -53,28 +53,40 @@ for (i = 0; i < COLS; i++) {
     }
 }
 
+var heldKeys = new Set();
+
+setInterval(function(){ // After a set time, put back the food
+	for (let held of heldKeys) {
+		socket.emit(held);
+	}
+},100);
+
 //Functions
 function keyDownHandler(event) {
     var key = String.fromCharCode(event.keyCode);
     if (started) {
         switch (key) {
             case "W":
-                socket.emit('W');
+                heldKeys.add('W');
+                heldKeys.delete('S');
                 break;
             case "S" :
-                socket.emit('S');
+                heldKeys.add('S');
+                heldKeys.delete('W');
                 break;
             case "A":
-                socket.emit('A');
+                heldKeys.add('A');
+                heldKeys.delete('D');
                 break;
             case "D":
-                socket.emit('D');
+                heldKeys.add('D');
+                heldKeys.delete('A');
                 break;
             case "E":
-                socket.emit('E');
+                heldKeys.add('E');
                 break;
             case "Q":
-                socket.emit('Q');
+                heldKeys.add('Q');
                 break;
             case "P":
                 party = !party;
@@ -87,16 +99,16 @@ function keyUpHandler(event) {
     var key = String.fromCharCode(event.keyCode);
     switch (key) {
         case "W":
-            socket.emit('-W');
+            heldKeys.delete('W');
             break;
         case "S" :
-            socket.emit('-S');
+            heldKeys.delete('S');
             break;
         case "A":
-            socket.emit('-A');
+            heldKeys.delete('A');
             break;
         case "D":
-            socket.emit('-D');
+            heldKeys.delete('D');
             break;
     }
 }
@@ -105,7 +117,7 @@ function keyUpHandler(event) {
 //##########################################//
 //#Everything between here and socket setup#//
 //#will be related to stuff that makes the #//
-//#game aspect of the game lol.            #//
+//#game.                                   #//
 //##########################################//
 //////////////////////////////////////////////
 
