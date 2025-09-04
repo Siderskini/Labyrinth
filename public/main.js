@@ -89,10 +89,10 @@ function keyDownHandler(event) {
 				heldKeys.delete('A');
 				break;
 			case "E":
-				heldKeys.add('E');
+				socket.emit('E');
 				break;
 			case "Q":
-				heldKeys.add('Q');
+				socket.emit('Q');
 				break;
 			case "P":
 				party = !party;
