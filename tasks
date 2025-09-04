@@ -3,13 +3,9 @@ The purpose of this document is to keep a bucket list of things that I want to d
 - Rendering
 	- The client side crashes if the maze is smaller than window size (large window or
 	  zoomed out)
-	- The graphics has some lag because the emit for the render locations and the emit 	  for game state are separate
-	- Rendering is currently done with 10fps based on emit events from server to
-	  client side
 
 - Meta
 	- Want to decide on some game mechanics including:
-		- Dots to collect (Done)
 		- Keys and an exit (Keys implemented, no exit)
 		- Have created enemies
 		- Some traps, like in the underground in Pokemon 4th gen games (?)

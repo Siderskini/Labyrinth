@@ -1069,7 +1069,6 @@ io.on('connection', function(socket){               //When a connection is made,
     });
 
     socket.on('W', function() {                      //When socket gets a W event from a client...
-    	console.log(1);
         if (map.get(socket.id) && !getTile(map.get(socket.id))[1]) {
             if (map.get(socket.id)[1] > 0) {
             	map.get(socket.id)[1]--;
