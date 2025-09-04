@@ -5,7 +5,7 @@
 /////////////
 
 // Make connection
-var socket = io.connect('localhost:4000');	//Uses the io interface to connect as a socket to localhost:4000
+var socket = io.connect('34.57.176.17:4000');	//Uses the io interface to connect as a socket to localhost:4000
 
 //Query DOM -- This is where all of the functionality of client side of the app happens
 var	wrapper = document.getElementById('wrapper'),
@@ -218,18 +218,16 @@ function drawItem(i, j, canvasi, canvasj) {
 
 /* End of Items */
 
-/* Safezones */
+/* Boss Zone */
 
-var safeGrid;
-
-function drawSafeZone(i, j, canvasi, canvasj) {
-	if (safeGrid[i][j]) {
-		ctx.fillStyle = '#FFB6C1';
-		ctx.fillRect(canvasi * TILE_S + 2, canvasj * TILE_S + 2, TILE_S - 4, TILE_S - 4);
+function drawBossZone(i, j, canvasi, canvasj) {
+	if (i > 22 && i < 26 && j > 22 && j < 26) {
+		ctx.fillStyle = 'purple';
+		ctx.fillRect(canvasi * TILE_S + 2, canvasj * TILE_S + 2, TILE_S, TILE_S);
 	}
 }
 
-/* End of safezones */
+/* End of Boss Zone */
 
 play.addEventListener('click', function() {		//Adds an event listener on button that when pressed, emits the message and handle to server
 	socket.emit('begin', {
@@ -334,7 +332,7 @@ socket.on('dead', function(data) {  //Called when a player dies
 
 //  Initialize the canvas and context
 canvas = document.createElement("canvas");
-ctx = canvas.getContext("2d");
+ctx = canvas.getContext("2d", {alpha: false, desynchronized: true});
 canvas.height = window.innerHeight - (window.innerHeight % TILE_S);
 canvas.width = window.innerWidth - (window.innerWidth % TILE_S);//canvas.height;
 canvas.setAttribute("tabIndex", "0");
@@ -424,16 +422,16 @@ function drawMaze (leftb, rightb, upb, downb, i, j) {
 	var canvasi = 0,
 		canvasj = 0;
 	var idown = Math.max(Math.floor(leftb / TILE_S), 0),
-		iup = Math.min(Math.floor(rightb / TILE_S), 47),
+		iup = Math.min(Math.floor(rightb / TILE_S), 48),
 		jdown = Math.max(Math.floor(upb / TILE_S), 0),
-		jup = Math.min(Math.floor(downb / TILE_S), 47);
+		jup = Math.min(Math.floor(downb / TILE_S), 48);
 	for (i = idown; i < iup; i++) {							//These two for loops help draw the maze
 		for (j = jdown; j < jup; j++) {
 			//Draw the walls
 			drawMazeTile(i, j, canvasi, canvasj);
 
-			//Draw safe zone
-			//drawSafeZone(i, j, canvasi, canvasj);
+			//Draw boss zone
+			drawBossZone(i, j, canvasi, canvasj);
 
 			//Draw the food
 			drawFood(i, j, canvasi, canvasj);
@@ -528,6 +526,10 @@ function drawMiniMap() {
 			}
 		}
 	}
+
+	//Boss zone
+	ctx.fillStyle = 'purple';
+	ctx.fillRect(canvas.width - 3 * TILE_S + 1 + (70 * TILE_S / COLS), canvas.height - 3 * TILE_S + 1 + (70 * TILE_S / ROWS), 9, 9);
 
 	//Player
 	ctx.fillStyle = 'rgb(64, 64, 64)';

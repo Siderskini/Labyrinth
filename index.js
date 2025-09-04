@@ -770,7 +770,7 @@ function getSmartMove(enemy, moves) {
 
 function aStarSearch(start, goal, depth, heuristic = null) {
     //Search the node that has the lowest combined cost and heuristic first
-    closed = [];
+    closed = new Set();
     var temp;
     q = new PriorityQueue();
     q.push(start);
@@ -780,16 +780,16 @@ function aStarSearch(start, goal, depth, heuristic = null) {
             return null;
         }
         node = q.dequeue();
-        if (closed.includes(node.element) || node.directions.length > depth) {
+        if (closed.has(node.element) || node.directions.length > depth) {
             continue;
         }
-        closed.push(node.element);
+        closed.add(node.element);
         if ((goal[0] == node.element[0]) && (goal[1] == node.element[1])) {
             return node.directions;
         }
         children = getNeighbors(node.element[0], node.element[1]);
         for (let x of children) {
-            if (!closed.includes(x[0])) {
+            if (!closed.has(x[0])) {
             	temp = node.directions.slice();
             	temp.push(x[1]);
                 q.update(x[0], node.priority + 1, temp);// + heuristic(x[0], problem));
@@ -1044,6 +1044,12 @@ io.on('connection', function(socket){               //When a connection is made,
     },10);
 
     socket.on('begin', function(data) {
+    	if (!data.name) {
+    		data.name = 'noname';
+    	}
+    	if (!data.color) {
+    		data.color = 'Grey'
+    	}
     	switch(spawnLocation()) {
 			case 0:
 				map.set(socket.id, [3 * (COLS / 4), (ROWS / 4), data.color, 0, data.name, [0, 0, 0]]);
