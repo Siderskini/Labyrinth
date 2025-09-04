@@ -5,18 +5,27 @@
 ///////////////////////////
 
 //Imports (?)
+const https = require('https');
 var fs = require('fs');
 var express = require('express');       //Sets up a callable express variable
 var socket = require('socket.io');      //Sets up a callable socket variable
 
 //App setup
 var app = express();                                    //Sets up an app object by calling express
-var server = app.listen(4000, function(){               //Sets up a server connection on locahost:4000
-    console.log('listening to requests on port 4000');  //When server connection is made, logs this message to console
-});
 
 //Static Files
 app.use(express.static('public'));      //Uses files in folder public as static files through express (?)
+
+const options = {
+  key: fs.readFileSync('./key.pem'),
+  cert: fs.readFileSync('./cert.pem')
+};
+
+const server = https.createServer(options, app);
+server.listen(4000, function(){               //Sets up a server connection on locahost:4000
+    console.log('listening to requests on port 4000');  //When server connection is made, logs this message to console
+});
+
 
 //Grid variables
 var COLS = 48, //Number of columns in maze
