@@ -1,0 +1,1 @@
+*/5 * * * * /home/siddharth_viswanathan/Labyrinth/run.sh >> /home/siddharth_viswanathan/Labyrinth/cron.log 2>&1
