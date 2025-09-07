@@ -1031,8 +1031,13 @@ We keep a map of socket connection to player data. Each value in the map contain
 		- 0 - Current Powerup (limited to 1)
 		- 1 - Bombs
 		- 2 - Keys, etc
+6 - lobby
+	- Which maze the player is in, numbered
 */
 var map = new Map();
+var lobbiesToPlayers = new Map();
+lobbiesToPlayers.set(0, new Set());
+var maxLobbySize = 10;
 
 io.on('connection', function(socket){               //When a connection is made, calls the function which...
     console.log('socket connected!', socket.id)     //Logs this message to console, along with the socket id of the connection
@@ -1059,21 +1064,27 @@ io.on('connection', function(socket){               //When a connection is made,
     	if (!data.color) {
     		data.color = 'Grey'
     	}
-    	switch(spawnLocation()) {
-			case 0:
-				map.set(socket.id, [3 * (COLS / 4), (ROWS / 4), data.color, 0, data.name, [0, 0, 0]]);
-				break;
-			case 1:
-				map.set(socket.id, [(COLS / 4), (ROWS / 4), data.color, 0, data.name, [0, 0, 0]]);
-				break;
-			case 2:
-				map.set(socket.id, [(COLS / 4), 3 * (ROWS / 4), data.color, 0, data.name, [0, 0, 0]]);
-				break;
-			case 3:
-				map.set(socket.id, [3 * (COLS / 4), 3 * (ROWS / 4), data.color, 0, data.name, [0, 0, 0]]);
-				break;
-		}
-    	//map.set(socket.id, [(COLS / 4), (ROWS / 4), data.color, 0, data.name, [0, 0, 0]]);
+    	spawnLocations = [[3 * (COLS / 4), (ROWS / 4)], 
+    						[(COLS / 4), (ROWS / 4)], 
+    						[(COLS / 4), 3 * (ROWS / 4)], 
+    						[3 * (COLS / 4), 3 * (ROWS / 4)]];
+    	var spawnLocation = spawnLocation();
+    	var newLobby = -1;
+    	for (let [lobby, players] of lobbiesToPlayers) {
+    		if (players.length < maxLobbySize) {
+    			newLobby = lobby;
+    			players.add(socket.id);
+    			lobbiesToPlayers.set(newLobby, players);
+    			break;
+    		}
+    	}
+    	if (newLobby = -1) {
+    		newLobby = lobbiesToPlayers.size;
+    		var newPlayers = new Set();
+    		newPlayers.add(socket.id);
+    		lobbiesToPlayers.set(newLobby, newPlayers);
+    	}
+		map.set(socket.id, [spawnLocations[spawnLocation][0], spawnLocations[spawnLocation][1], data.color, 0, data.name, [0, 0, 0], newLobby]);
     	io.to(socket.id).emit('privateState', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1], score: map.get(socket.id)[3], items: map.get(socket.id)[5]});
     });
 
@@ -1127,6 +1138,13 @@ io.on('connection', function(socket){               //When a connection is made,
 
     socket.on('disconnect', function(){
         map.delete(socket.id);
+        for (let [lobby, players] of lobbiesToPlayers) {
+    		if (players.has(socket.id)) {
+    			players.delete(socket.id);
+    			lobbiesToPlayers.put(lobby, players)
+    			break;
+    		}
+    	}
     });
 
     socket.on('respawn', function(){
