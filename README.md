@@ -8,9 +8,10 @@ This repo contains the code needed to set up a copy of labyrinth on your local c
 
 **Local Setup:**
 
-1. Clone the repo locally
-2. Navigate into the repo and type
-`node index`
+1. Clone the repo locally, make sure you have node version 24.13 or greater (`node -v`)
+2. `cd labyrinth`
+3. `npm install`
+4. `node index`
 
 
 **Special Instructions for server setup:**

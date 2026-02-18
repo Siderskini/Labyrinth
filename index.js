@@ -6,6 +6,7 @@
 
 //Imports (?)
 const https = require('https');
+const http = require('http');
 var fs = require('fs');
 var express = require('express');       //Sets up a callable express variable
 var socket = require('socket.io');      //Sets up a callable socket variable
@@ -16,12 +17,13 @@ var app = express();                                    //Sets up an app object 
 //Static Files
 app.use(express.static('public'));      //Uses files in folder public as static files through express (?)
 
-const options = {
+const options = fs.existsSync('./key.pem') ?{
   key: fs.readFileSync('./key.pem'),
   cert: fs.readFileSync('./cert.pem')
-};
+} : null;
 
-const server = https.createServer(options, app);
+const server = options === null ? http.createServer(app) : https.createServer(options, app);
+
 server.listen(4000, function(){               //Sets up a server connection on locahost:4000
 	console.log('listening to requests on port 4000');  //When server connection is made, logs this message to console
 });
@@ -997,9 +999,9 @@ function addPlayerToLobby(socketId) {
 
 function removePlayerFromLobbies(socketId) {
 	for (let [lobby, players] of lobbiesToPlayers) {
-		if (players.has(socket.id)) {
-			players.delete(socket.id);
-			lobbiesToPlayers.put(lobby, players)
+		if (players.has(socketId)) {
+			players.delete(socketId);
+			lobbiesToPlayers.set(lobby, players);
 			break;
 		}
 	}
@@ -1112,7 +1114,6 @@ function continuous(id) {
 default - create new random maze
 */
 function main(args) {
-
 	//Create the maze
 	switch(args) {
 		case 'test':
