@@ -5,7 +5,9 @@
 /////////////
 
 // Make connection
-var socket = io.connect('34.57.176.17:4000');	//Uses the io interface to connect as a socket to localhost:4000
+const host = 'localhost';
+const port = 4000;
+var socket = io.connect(host+':'+ port);	//Uses the io interface to connect as a socket to localhost:4000
 
 //Query DOM -- This is where all of the functionality of client side of the app happens
 var	wrapper = document.getElementById('wrapper'),

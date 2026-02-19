@@ -17,15 +17,20 @@ var app = express();                                    //Sets up an app object 
 //Static Files
 app.use(express.static('public'));      //Uses files in folder public as static files through express (?)
 
+// Load optional config for hosting
+const config = fs.existsSync('./config.json') ? JSON.parse(fs.readFileSync('./config.json', 'utf8')) : {host: 'localhost', port: 4000};
+
+// Load optional keys for hosting via https
 const options = fs.existsSync('./key.pem') ?{
   key: fs.readFileSync('./key.pem'),
   cert: fs.readFileSync('./cert.pem')
 } : null;
 
+// Create a web server. If options is null, creates an http server, otherwise creates an https server with the given options.
 const server = options === null ? http.createServer(app) : https.createServer(options, app);
 
-server.listen(4000, function(){               //Sets up a server connection on locahost:4000
-	console.log('listening to requests on port 4000');  //When server connection is made, logs this message to console
+server.listen(config.port, function(){               //Sets up a server connection on the configured port
+	console.log('listening to requests on port ' + config.port);  //When server connection is made, logs this message to console
 });
 
 
@@ -33,7 +38,7 @@ server.listen(4000, function(){               //Sets up a server connection on l
 var COLS = 48, //Number of columns in maze
 	ROWS = 48; //Number of rows in maze
 
-//An array storing the valuex zero to three
+//An array storing the values zero to three
 var zeroToThree = [0, 1, 2, 3]; //Used for opening and closing the walls
 
 //Initializes maze grid with all walls
@@ -296,9 +301,9 @@ function loadTestGrid(file) {
 	lobbiesToPlayers.set(0, players);
 	var grid = JSON.parse(data).grid;
 	createLobby();
-	var lobby = lobbiesToLabyrinths.get(0);
-	lobby[0] = grid;
-	lobbiesToLabyrinths.set(0, lobby);
+	var labyrinth = lobbiesToLabyrinths.get(0);
+	labyrinth[0] = grid;
+	lobbiesToLabyrinths.set(0, labyrinth);
 }
 
 //Saves a made maze to a file for testing
@@ -348,7 +353,8 @@ function tileExists(x, y, grid) {
 /* Food 
 	Food is eaten to increase a player's score. 
 	It is available on all grid spaces except dead ends, spaces with items on them, and spaces where it has recently been consumed.
-	Eating one food will increase the player's score by 1. */
+	Eating one food will increase the player's score by 1. 
+*/
 var foodTimeout = 30000; //Food will respawn after 30s
 
 //Food grid is a grid used for storing food
@@ -367,15 +373,15 @@ function createFoodGrid(grid) {
 
 //This function has rules for what happens when food is eaten
 function eatFood(x, y, id, lobbyId) {
-	var lobby = lobbiesToLabyrinths.get(lobbyId);
-	if (lobby[1][x][y]) {
-		lobby[1][x][y] = false; //Remove the food
+	var labyrinth = lobbiesToLabyrinths.get(lobbyId);
+	if (labyrinth[1][x][y]) {
+		labyrinth[1][x][y] = false; //Remove the food
 		map.get(id)[3]++; // Increment the player's score
-		lobbiesToLabyrinths.set(lobbyId, lobby);
+		lobbiesToLabyrinths.set(lobbyId, labyrinth);
 		setTimeout(function(){ // After a set time, put back the food
-			lobby = lobbiesToLabyrinths.get(lobbyId);
-			lobby[1][x][y] = true;
-			lobbiesToLabyrinths.set(lobbyId, lobby);
+			labyrinth = lobbiesToLabyrinths.get(lobbyId);
+			labyrinth[1][x][y] = true;
+			lobbiesToLabyrinths.set(lobbyId, labyrinth);
 		},foodTimeout);
 	}
 }
@@ -383,7 +389,8 @@ function eatFood(x, y, id, lobbyId) {
 
 /* Safe zones 
 	Safe zones are places where enemies cannot enter, with no walls, food, or items. 
-	Players will spawn in safe zones. */
+	Players will spawn in safe zones. 
+*/
 function createSafeGrid() {
 	var safeGrid = [];
 	for (i = 0; i < COLS; i++) {
@@ -434,7 +441,8 @@ function createSafeZone(coords, length, width, grid, foodGrid, safeGrid) {
 		Bombs
 			Bombs explode after a set time with a radius of one tile, eliminating all players and enemies in that space
 		Keys
-			Keys open all the walls for the tile that a player is on*/
+			Keys open all the walls for the tile that a player is on
+*/
 var keytimeOut = 3000, 
 	bombTimeout = 100, 
 	bombRadius = 1,
@@ -485,52 +493,53 @@ function useItem(id, item) {
 
 //Use a key to open all of the walls for a tile, then close it after 3s
 function useKey(x, y, lobbyId) {
-	var lobby = lobbiesToLabyrinths.get(lobbyId);
-	var temp = getTile([x, y], grid).slice();
-	lobby[0] = openWall(x, y, 0, grid);
-	lobby[0] = openWall(x, y, 1, grid);
-	lobby[0] = openWall(x, y, 2, grid);
-	lobby[0] = openWall(x, y, 3, grid);
-	lobbiesToLabyrinths.set(lobbyId, lobby)
+	var labyrinth = lobbiesToLabyrinths.get(lobbyId);
+	var temp = getTile([x, y], labyrinth[0]).slice();
+	labyrinth[0] = openWall(x, y, 0, labyrinth[0]);
+	labyrinth[0] = openWall(x, y, 1, labyrinth[0]);
+	labyrinth[0] = openWall(x, y, 2, labyrinth[0]);
+	labyrinth[0] = openWall(x, y, 3, labyrinth[0]);
+	lobbiesToLabyrinths.set(lobbyId, labyrinth);
+	lobbiesToLabyrinths.set(lobbyId, labyrinth)
 	setTimeout(function(){
-		lobby = lobbiesToLabyrinths.get(lobbyId);
+		labyrinth = lobbiesToLabyrinths.get(lobbyId);
 		for (i = 0; i < 4; i++) {
 			if (temp[i]) {
-				lobby[0] = closeWall(x, y, i, lobby[0]);
+				labyrinth[0] = closeWall(x, y, i, labyrinth[0]);
 			}
 		}
-		lobbiesToLabyrinths.set(lobbyId, lobby)
+		lobbiesToLabyrinths.set(lobbyId, labyrinth)
 	},keytimeOut);
 }
 
 //Sets a bomb on a tile and detonates it after the timeout
 function setBomb(x, y, lobbyId) {
-	var lobby = lobbiesToLabyrinths.get(lobbyId);
-	if (lobby[3][x][y] != "comb") {
-		var newGrids = placeItem(x, y, "comb", lobby[3], lobby[1]);
-		lobby[3] = newGrids[0];
-		lobby[1] = newGrids[1];
-		lobbiesToLabyrinths.set(lobbyId, lobby);
+	var labyrinth = lobbiesToLabyrinths.get(lobbyId);
+	if (labyrinth[3][x][y] != "comb") {
+		var newGrids = placeItem(x, y, "comb", labyrinth[3], labyrinth[1]);
+		labyrinth[3] = newGrids[0];
+		labyrinth[1] = newGrids[1];
+		lobbiesToLabyrinths.set(lobbyId, labyrinth);
 		setTimeout(function(){
-			lobby = lobbiesToLabyrinths.get(lobbyId);
-			lobby[3][x][y] = null;
+			labyrinth = lobbiesToLabyrinths.get(lobbyId);
+			labyrinth[3][x][y] = null;
 			detonateBomb(x, y, bombRadius, lobbyId);
-			lobbiesToLabyrinths.set(lobbyId, lobby);
+			lobbiesToLabyrinths.set(lobbyId, labyrinth);
 		},3000);
 	}
 }
 
 //Places explosion effects on neighboring tiles, eleminates enemies and players, and removes explosion effect after 100ms
 function detonateBomb(x, y, radius, lobbyId) {
-	var lobby = lobbiesToLabyrinths.get(lobbyId);
-	var foodGrid = lobby[1];
-	var safeGrid = lobby[2];
-	var itemGrid = lobby[3];
+	var labyrinth = lobbiesToLabyrinths.get(lobbyId);
+	var foodGrid = labyrinth[1];
+	var safeGrid = labyrinth[2];
+	var itemGrid = labyrinth[3];
 	var enemy;
-	var newGrids = [lobby[3], lobby[1]];
+	var newGrids = [labyrinth[3], labyrinth[1]];
 	for (i = x - radius; i < x + radius + 1; i++) {
 		for (j = y - radius; j < y + radius + 1; j++) {
-			if (grid[i] && grid[i][j] && !safeGrid[i][j]) {
+			if (labyrinth[0][i] && labyrinth[0][i][j] && !safeGrid[i][j]) {
 				if (hasItem(x, y, itemGrid)) {
 					overItem(x, y, null, itemGrid, lobbyId);
 				}
@@ -549,9 +558,9 @@ function detonateBomb(x, y, radius, lobbyId) {
 			}
 		}	
 	}
-	lobby[3] = newGrids[0];
-	lobby[1] = newGrids[1];
-	lobbiesToLabyrinths.set(lobbyId, lobby);
+	labyrinth[3] = newGrids[0];
+	labyrinth[1] = newGrids[1];
+	lobbiesToLabyrinths.set(lobbyId, labyrinth);
 	setTimeout(function() {
 		afterBomb(x, y, radius, lobbyId);
 	},100);
@@ -559,46 +568,46 @@ function detonateBomb(x, y, radius, lobbyId) {
 
 //Remove the explosion effect from affected tiles
 function afterBomb(x, y, radius, lobbyId) {
-	var lobby = lobbiesToLabyrinths.get(lobbyId);
-	var newGrids = [lobby[3], lobby[1]];
+	var labyrinth = lobbiesToLabyrinths.get(lobbyId);
+	var newGrids = [labyrinth[3], labyrinth[1]];
 	for (i = x - radius; i < x + radius + 1; i++) {
 		for (j = y - radius; j < y + radius + 1; j++) {
-			if (grid[i] && grid[i][j]) {
+			if (labyrinth[0][i] && labyrinth[0][i][j]) {
 				newGrids = placeItem(i, j, null, newGrids[0], newGrids[1]);
 			}
 		}
 	}
-	lobby[3] = newGrids[0];
-	lobby[1] = newGrids[1];
-	lobbiesToLabyrinths.set(lobbyId, lobby);
+	labyrinth[3] = newGrids[0];
+	labyrinth[1] = newGrids[1];
+	lobbiesToLabyrinths.set(lobbyId, labyrinth);
 }
 
 //If the player is on top of an item, add it to their inventory, remove it from the maze, and bring it back after a specified time
 function overItem(x, y, id, itemGrid, lobbyId) {
-	var lobby = lobbiesToLabyrinths.get(lobbyId);
-	var currentItem = lobby[3][x][y];
+	var labyrinth = lobbiesToLabyrinths.get(lobbyId);
+	var currentItem = itemGrid[x][y];
 	if (currentItem) {
 		switch(currentItem) {
 			case "bomb":
-				lobby[3][x][y] = null;
+				itemGrid[x][y] = null;
 				if (id != null) {
 					map.get(id)[3] += 5;
 					map.get(id)[5][1]++;
 				}
 				break;
 			case "key":
-				lobby[3][x][y] = null;
+				itemGrid[x][y] = null;
 				if (id != null) {
 					map.get(id)[3] += 3;
 					map.get(id)[5][2]++;
 				}
 		}
-		lobbiesToLabyrinths.set(lobbyId, lobby);
-		if (lobby[3][x][y] != "boom" && lobby[3][x][y] != "comb") {
+		lobbiesToLabyrinths.set(lobbyId, labyrinth);
+		if (itemGrid[x][y] != "boom" && itemGrid[x][y] != "comb") {
 			setTimeout(function(){
-				lobby = lobbiesToLabyrinths.get(lobbyId);
-				lobby[3][x][y] = currentItem;
-				lobbiesToLabyrinths.set(lobbyId, lobby);
+				labyrinth = lobbiesToLabyrinths.get(lobbyId);
+				itemGrid[x][y] = currentItem;
+				lobbiesToLabyrinths.set(lobbyId, labyrinth);
 			},itemRespawnTimeout);
 		}
 	}
@@ -628,10 +637,10 @@ var mobTimeout = 30000,
 	smartyTimeout = 30000,
 	minotaurTimeout = 30000;
 
-function moveEnemies(lobby) {
-	var grid = lobby[0];
-	var safeGrid = lobby[1];
-	var enemies = lobby[4];
+function moveEnemies(labyrinth) {
+	var grid = labyrinth[0];
+	var safeGrid = labyrinth[1];
+	var enemies = labyrinth[4];
 	for (let enemy of enemies) {
 		switch (enemy[0]) {
 			case 'mob':
@@ -655,29 +664,30 @@ function moveEnemies(lobby) {
 			case 'minotaur':
 				var move = getMinotaurMove(enemy, grid, safeGrid);
 				var temp = enemy.slice();
+				var tile = getTile([enemy[1], enemy[2]], grid);
 				if (move[0] == 1) {
-					if (getTile([temp[1], temp[2]])[2], grid) {
+					if (tile[2], grid) {
 						openWall(temp[1], temp[2], 2, grid);
 						setTimeout(function(){
 							closeWall(temp[1], temp[2], 2, grid);
 						},1000);
 					}
 				} else if (move[1] ==1 ) {
-					if (getTile([enemy[1], enemy[2]])[3], grid) {
+					if (tile[3], grid) {
 						openWall(temp[1], temp[2], 3, grid);
 						setTimeout(function(){
 							closeWall(temp[1], temp[2], 3, grid);
 						},1000);
 					}
 				} else if (move[0] == -1) {
-					if (getTile([enemy[1], enemy[2]])[0], grid) {
+					if (tile[0], grid) {
 						openWall(temp[1], temp[2], 0, grid);
 						setTimeout(function(){
 							closeWall(temp[1], temp[2], 0, grid);
 						},1000);
 					}
 				} else if (move[1] == -1) {
-					if (getTile([enemy[1], enemy[2]])[1], grid) {
+					if (tile[1], grid) {
 						openWall(temp[1], temp[2], 1, grid);
 						setTimeout(function(){
 							closeWall(temp[1], temp[2], 1, grid);
@@ -801,7 +811,7 @@ function distance(a, b) {
 	return Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]);
 }
 
-// reates a space of specified length and width with no food or walls at specific coordinates for minotaur
+// Creates a space of specified length and width with no food or walls at specific coordinates for minotaur
 function createMinotaurZone(coords, length, width, grid, foodGrid) {
 	for (i = coords[0]; i < coords[0] + width; i++) {
 		grid = openWall(i, coords[1], 0, grid);
@@ -878,34 +888,34 @@ function minoMoves(x, y, grid, safeGrid) {
 
 //Kill an enemy on a tile, then bring it back after a specified time
 function kill(index, lobbyId) {
-	var lobby = lobbiesToLabyrinths.get(lobbyId);
-	var enemies = lobby[4];
+	var labyrinth = lobbiesToLabyrinths.get(lobbyId);
+	var enemies = labyrinth[4];
 	var temp = enemies[index].slice();
 	enemies.splice(index, 1);
-	lobby[4] = enemies;
-	lobbiesToLabyrinths.set(lobbyId, lobby);
+	labyrinth[4] = enemies;
+	lobbiesToLabyrinths.set(lobbyId, labyrinth);
 	switch (temp[0]) {
 		case 'mob':
 			setTimeout(function(){
-				lobby = lobbiesToLabyrinths.get(lobbyId);
-				lobby[4].push(temp.slice());
-				lobbiesToLabyrinths.set(lobbyId, lobby);
+				labyrinth = lobbiesToLabyrinths.get(lobbyId);
+				labyrinth[4].push(temp.slice());
+				lobbiesToLabyrinths.set(lobbyId, labyrinth);
 			},mobTimeout);
 			break;
 		case 'smarty':
 			setTimeout(function(){
-				lobby = lobbiesToLabyrinths.get(lobbyId);
-				lobby[4].push(temp.slice());
-				lobbiesToLabyrinths.set(lobbyId, lobby);
+				labyrinth = lobbiesToLabyrinths.get(lobbyId);
+				labyrinth[4].push(temp.slice());
+				lobbiesToLabyrinths.set(lobbyId, labyrinth);
 			},smartyTimeout);
 			break;
 		case 'minotaur':
 			temp[1] = COLS / 2;
 			temp[2] = ROWS / 2;
 			setTimeout(function(){
-				lobby = lobbiesToLabyrinths.get(lobbyId);
-				lobby[4].push(temp.slice());
-				lobbiesToLabyrinths.set(lobbyId, lobby);
+				labyrinth = lobbiesToLabyrinths.get(lobbyId);
+				labyrinth[4].push(temp.slice());
+				lobbiesToLabyrinths.set(lobbyId, labyrinth);
 			},minotaurTimeout);
 			break;
 	}
@@ -933,7 +943,7 @@ function sortPlayer(a,b) {
 /* Death 
 	Upon dying, players will see their score and a popup will ask if they want to respawn */
 //Counts players per quadrants and returns the quadrant to spawn in
-function spawnLocation() {
+function respawnLocation() {
 	var counter = [0, 0, 0, 0];
 	for (let [key, value] of map) {
 		if(value[0] < COLS / 2){
@@ -965,14 +975,31 @@ function respawn(id) {
 							[(COLS / 4), (ROWS / 4)], 
 							[(COLS / 4), 3 * (ROWS / 4)], 
 							[3 * (COLS / 4), 3 * (ROWS / 4)]];
-	var spawnLocation = spawnLocation()
+	var spawnLocation = respawnLocation()
 	map.set(id, [spawnLocations[spawnLocation][0], spawnLocations[spawnLocation][1], map.get(id)[2], 0, map.get(id)[4], [0, 0, 0], map.get(id)[6]]);
 }
 /* End of death */
 
-/* Lobbies */
-var lobbiesToPlayers = new Map();
-var lobbiesToLabyrinths = new Map();
+/* Lobbies 
+	A lobby is a concept used to link players to labyrinths. This prevents labyrinths from getting overcrowded, while also supporting invites to lobbies.
+	As such, we have two global maps with lobbyId as the key:
+	- lobbiesToPlayers, which maps lobbyIds to sets of player socket ids
+	- lobbiesToLabyrinths, which maps lobbyIds to labyrinths, which are 
+		{
+			0: grid, 
+			1: foodGrid, 
+			2: safeGrid, 
+			3: itemGrid, 
+			4: enemies
+		}
+	
+		Right now, we have a basic system for adding players to lobbies, but it is not fully implemented. 
+		Players are added to the first lobby with space, and if there are no lobbies with space, a new lobby is created. 
+		Removing players from lobbies is also not fully implemented, but the function is there. 
+		The lobby system is also used to determine which labyrinth a player is in, which is important for things like moving enemies and eating food.
+*/
+var lobbiesToPlayers = new Map(); // Maps lobby numbers to sets of player socket ids
+var lobbiesToLabyrinths = new Map(); // Maps lobby numbers to labyrinths, which are arrays of [grid, foodGrid, safeGrid, itemGrid, enemies]
 lobbiesToPlayers.set(0, new Set());
 var maxLobbySize = 10;
 var numberOfLobbies = 0;
@@ -980,14 +1007,14 @@ var numberOfLobbies = 0;
 function addPlayerToLobby(socketId) {
 	var newLobby = -1;
 	for (let [lobby, players] of lobbiesToPlayers) {
-		if (players.length < maxLobbySize) {
+		if (players.size < maxLobbySize) {
 			newLobby = lobby;
 			players.add(socketId);
 			lobbiesToPlayers.set(newLobby, players);
 			break;
 		}
 	}
-	if (newLobby = -1) {
+	if (newLobby === -1) {
 		newLobby = lobbiesToPlayers.size;
 		var newPlayers = new Set();
 		newPlayers.add(socketId);
@@ -1002,7 +1029,7 @@ function removePlayerFromLobbies(socketId) {
 		if (players.has(socketId)) {
 			players.delete(socketId);
 			lobbiesToPlayers.set(lobby, players);
-			break;
+			return;
 		}
 	}
 }
@@ -1046,21 +1073,6 @@ function createLobby(lobbyId) {
 	//Create the enemies
 	var enemies = [];
 
-	//Add some enemies to our list
-	//Add mobs
-	/*
-	for (i = 4; i < ROWS - 4; i++) {
-		enemies.push(['mob', i, i]);
-	}
-	*/
-	/*
-	for (i = 4; i < COLS; i += 4) {
-		for (j = 4; j < ROWS; j += 4) {
-			enemies.push(['mob', i, j]);
-		}
-	}
-	*/
-
 	//Add smartys
 	for (i = 0; i < COLS; i += 4) {
 		for (j = 0; j < ROWS; j += 4) {
@@ -1090,18 +1102,22 @@ function createLobby(lobbyId) {
 function afterMove(id) {
 	var x = map.get(id)[0],
 		y = map.get(id)[1];
-	var lobby = lobbiesToLabyrinths.get(map.get(6));
-	updateTile(map.get(id), lobby[0]);
-	eatFood(x, y, id, map.get(6));
-	overItem(x, y, id, map.get(6));
+	var labyrinth = lobbiesToLabyrinths.get(map.get(id)[6]);
+	updateTile(map.get(id), labyrinth[0]);
+	eatFood(x, y, id, map.get(id)[6]);
+	overItem(x, y, id, labyrinth[3], map.get(id)[6]);
 }
 
 //Continuous processing for each player (eat, interact with enemies, display leaderboard)
 function continuous(id) {
 	var x = map.get(id)[0],
 		y = map.get(id)[1];
-	eatFood(x, y, id, map.get(6));											//Eat food if available
-	for (let enemy of enemies) {								//Die if touching enemy
+	var lobbyId = map.get(id)[6];
+	if (lobbyId === null) {
+		return;
+	}
+	eatFood(x, y, id, lobbyId);											//Eat food if available
+	for (let enemy of lobbiesToLabyrinths.get(lobbyId)[4]) {								//Die if touching enemy
 		if ((enemy[1] == x) && (enemy[2] == y)) {
 			die(id);
 		}
@@ -1156,29 +1172,32 @@ We keep a map of socket connection to player data. Each value in the map contain
 		- 0 - Current Powerup (limited to 1)
 		- 1 - Bombs
 		- 2 - Keys, etc
-6 - lobby
+6 - lobbyId
 	- Which maze the player is in, numbered
 */
 var map = new Map();
 
-io.on('connection', function(socket){               //When a connection is made, calls the function which...
-	var lobbyId;
-	console.log('socket connected!', socket.id)     //Logs this message to console, along with the socket id of the connection
-	//io.to(socket.id).emit('privateState', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1], score: map.get(socket.id)[3]});
-	io.to(socket.id).emit('begin', {locations: mapToArray(map), grid: grid, food: foodGrid, enemies: enemies, leaderboard: getLeaders(), items: itemGrid, safe: safeGrid});
+//Handles continuous serverside events, including emitting gameState to clients
+setInterval(function(){
+	for (var [lobbyId, players] of lobbiesToPlayers) {
+		var labyrinth = lobbiesToLabyrinths.get(lobbyId);
+		if (!labyrinth) {
+			continue;
+		}
+		for (var player of players) {
+			io.to(player).emit('privateState', {playerx: map.get(player)[0], playery: map.get(player)[1], score: map.get(player)[3], items: map.get(player)[5]});
+			io.to(player).emit('gameState', {locations: mapToArray(map), grid: labyrinth[0], food: labyrinth[1], enemies: labyrinth[4], leaderboard: getLeaders(), items: labyrinth[3], safe: labyrinth[2]});
+		}
+	}
+},100);
 
-	//Handles continuous events, including emitting gameState to client
-	setInterval(function(){
-		if (map.get(socket.id)) {
-			io.to(socket.id).emit('privateState', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1], score: map.get(socket.id)[3], items: map.get(socket.id)[5]});
-			io.emit('gameState', {locations: mapToArray(map), grid: grid, food: foodGrid, enemies: enemies, leaderboard: getLeaders(), items: itemGrid, safe: safeGrid});
-		}
-	},100);
-	setInterval(function(){
-		if (map.get(socket.id)) {
-			continuous(socket.id);
-		}
-	},10);
+io.on('connection', function(socket){               //When a connection is made, calls the function which...
+	var lobbyId = null; // Make this globally available in connection scope
+	console.log('socket connected!', socket.id)     //Logs this message to console, along with the socket id of the connection
+	//On first connection, we still don't know which lobby the player will be in, so we just send them the first one until they send us their name and color and we can put them in a lobby. 
+	//This is a band-aid fix for the problem of the client needing the map before it can send us the info to put it in a lobby, which is necessary to know which map to send it.
+	var labyrinth = lobbiesToLabyrinths.values().next().value;
+	io.to(socket.id).emit('begin', {locations: mapToArray(map), grid: labyrinth[0], food: labyrinth[1], enemies: labyrinth[4], leaderboard: getLeaders(), items: labyrinth[3], safe: labyrinth[2]});
 
 	socket.on('begin', function(data) {
 		if (!data.name) {
@@ -1191,10 +1210,17 @@ io.on('connection', function(socket){               //When a connection is made,
 							[(COLS / 4), (ROWS / 4)], 
 							[(COLS / 4), 3 * (ROWS / 4)], 
 							[3 * (COLS / 4), 3 * (ROWS / 4)]];
-		var spawnLocation = spawnLocation();
+		var spawnLocation = respawnLocation();
 		lobbyId = addPlayerToLobby(socket.id);
-		map.set(socket.id, [spawnLocations[spawnLocation][0], spawnLocations[spawnLocation][1], data.color, 0, data.name, [0, 0, 0], newLobby]);
+		map.set(socket.id, [spawnLocations[spawnLocation][0], spawnLocations[spawnLocation][1], data.color, 0, data.name, [0, 0, 0], lobbyId]);
 		io.to(socket.id).emit('privateState', {playerx: map.get(socket.id)[0], playery: map.get(socket.id)[1], score: map.get(socket.id)[3], items: map.get(socket.id)[5]});
+
+		//Handles continuous events for a connection, such as eating food and interacting with enemies
+		setInterval(function(){
+			if (map.get(socket.id)) {
+				continuous(socket.id);
+			}
+		},10);
 	});
 
 	socket.on('W', function() {                      //When socket gets a W event from a client...
