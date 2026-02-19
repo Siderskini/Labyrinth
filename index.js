@@ -35,11 +35,11 @@ server.listen(config.port, function(){               //Sets up a server connecti
 
 
 //Grid variables
-var COLS = 48, //Number of columns in maze
+const COLS = 48, //Number of columns in maze
 	ROWS = 48; //Number of rows in maze
 
 //An array storing the values zero to three
-var zeroToThree = [0, 1, 2, 3]; //Used for opening and closing the walls
+const zeroToThree = [0, 1, 2, 3]; //Used for opening and closing the walls
 
 //Initializes maze grid with all walls
 function createGrid() {
@@ -355,7 +355,7 @@ function tileExists(x, y, grid) {
 	It is available on all grid spaces except dead ends, spaces with items on them, and spaces where it has recently been consumed.
 	Eating one food will increase the player's score by 1. 
 */
-var foodTimeout = 30000; //Food will respawn after 30s
+const foodTimeout = 30000; //Food will respawn after 30s
 
 //Food grid is a grid used for storing food
 function createFoodGrid(grid) {
@@ -443,8 +443,9 @@ function createSafeZone(coords, length, width, grid, foodGrid, safeGrid) {
 		Keys
 			Keys open all the walls for the tile that a player is on
 */
-var keytimeOut = 3000, 
-	bombTimeout = 100, 
+const keytimeOut = 3000, 
+	bombTimeout = 3000, 
+	bombEffectTimeout = 100,
 	bombRadius = 1,
 	itemRespawnTimeout = 30000;
 
@@ -500,7 +501,6 @@ function useKey(x, y, lobbyId) {
 	labyrinth[0] = openWall(x, y, 2, labyrinth[0]);
 	labyrinth[0] = openWall(x, y, 3, labyrinth[0]);
 	lobbiesToLabyrinths.set(lobbyId, labyrinth);
-	lobbiesToLabyrinths.set(lobbyId, labyrinth)
 	setTimeout(function(){
 		labyrinth = lobbiesToLabyrinths.get(lobbyId);
 		for (i = 0; i < 4; i++) {
@@ -508,7 +508,7 @@ function useKey(x, y, lobbyId) {
 				labyrinth[0] = closeWall(x, y, i, labyrinth[0]);
 			}
 		}
-		lobbiesToLabyrinths.set(lobbyId, labyrinth)
+		lobbiesToLabyrinths.set(lobbyId, labyrinth);
 	},keytimeOut);
 }
 
@@ -525,16 +525,16 @@ function setBomb(x, y, lobbyId) {
 			labyrinth[3][x][y] = null;
 			detonateBomb(x, y, bombRadius, lobbyId);
 			lobbiesToLabyrinths.set(lobbyId, labyrinth);
-		},3000);
+		},bombTimeout);
 	}
 }
 
 //Places explosion effects on neighboring tiles, eleminates enemies and players, and removes explosion effect after 100ms
 function detonateBomb(x, y, radius, lobbyId) {
 	var labyrinth = lobbiesToLabyrinths.get(lobbyId);
-	var foodGrid = labyrinth[1];
 	var safeGrid = labyrinth[2];
 	var itemGrid = labyrinth[3];
+	var enemies = labyrinth[4];
 	var enemy;
 	var newGrids = [labyrinth[3], labyrinth[1]];
 	for (i = x - radius; i < x + radius + 1; i++) {
@@ -563,7 +563,7 @@ function detonateBomb(x, y, radius, lobbyId) {
 	lobbiesToLabyrinths.set(lobbyId, labyrinth);
 	setTimeout(function() {
 		afterBomb(x, y, radius, lobbyId);
-	},100);
+	},bombEffectTimeout);
 }
 
 //Remove the explosion effect from affected tiles
@@ -633,13 +633,15 @@ function overItem(x, y, id, itemGrid, lobbyId) {
 		  that occurs on a large scale. 
 		  I want the boss to only be defeatable through capture or other means, to discourage the idea of necessary killing.
 */
-var mobTimeout = 30000,
+const mobTimeout = 30000,
 	smartyTimeout = 30000,
-	minotaurTimeout = 30000;
+	minotaurTimeout = 30000,
+	wallTimeout = 1000,
+	moveEnemyTimeout = 1000;
 
 function moveEnemies(labyrinth) {
 	var grid = labyrinth[0];
-	var safeGrid = labyrinth[1];
+	var safeGrid = labyrinth[2];
 	var enemies = labyrinth[4];
 	for (let enemy of enemies) {
 		switch (enemy[0]) {
@@ -670,28 +672,28 @@ function moveEnemies(labyrinth) {
 						openWall(temp[1], temp[2], 2, grid);
 						setTimeout(function(){
 							closeWall(temp[1], temp[2], 2, grid);
-						},1000);
+						},wallTimeout);
 					}
 				} else if (move[1] ==1 ) {
 					if (tile[3], grid) {
 						openWall(temp[1], temp[2], 3, grid);
 						setTimeout(function(){
 							closeWall(temp[1], temp[2], 3, grid);
-						},1000);
+						},wallTimeout);
 					}
 				} else if (move[0] == -1) {
 					if (tile[0], grid) {
 						openWall(temp[1], temp[2], 0, grid);
 						setTimeout(function(){
 							closeWall(temp[1], temp[2], 0, grid);
-						},1000);
+						},wallTimeout);
 					}
 				} else if (move[1] == -1) {
 					if (tile[1], grid) {
 						openWall(temp[1], temp[2], 1, grid);
 						setTimeout(function(){
 							closeWall(temp[1], temp[2], 1, grid);
-						},1000);
+						},wallTimeout);
 					}
 				}
 				enemy[1] += move[0];
@@ -705,7 +707,7 @@ function moveEnemies(labyrinth) {
 function startMovingEnemies(lobbyId) {
 	setInterval(function(){
 		moveEnemies(lobbiesToLabyrinths.get(lobbyId));
-	},1000);
+	},moveEnemyTimeout);
 }
 
 //Gets possible moves for an enemy
@@ -847,7 +849,7 @@ function createMinotaurZone(coords, length, width, grid, foodGrid) {
 function getMinotaurMove(enemy, grid, safeGrid) {
 	var target = [enemy[1], enemy[2]];
 	var maxScore = -1;
-	for (let [key, value] of map) {
+	for (let [_, value] of map) {
 		if (value[3] > maxScore) {
 			maxScore = value[3];
 			target = [value[0], value[1]];
@@ -869,7 +871,6 @@ function vectorToMove(vector, moves) {
 }
 
 function minoMoves(x, y, grid, safeGrid) {
-	var tile = getTile([x, y], grid);
 	moves = [];
 	if (tileExists(x - 1, y, grid) && !safeGrid[x - 1][y]) {
 		moves.push([-1, 0]);
@@ -993,9 +994,10 @@ function respawn(id) {
 			4: enemies
 		}
 	
-		Right now, we have a basic system for adding players to lobbies, but it is not fully implemented. 
+		Right now, we have a basic system for adding players to lobbies. 
 		Players are added to the first lobby with space, and if there are no lobbies with space, a new lobby is created. 
-		Removing players from lobbies is also not fully implemented, but the function is there. 
+		Removing players from lobbies is also not fully implemented, as lobbies are never removed, but players will be removed from lobbies.
+		This is not a huge deal at the moment, but ideally, we would remove empty lobbies and possibly add a system for players to choose non-full lobbies to join, or even create private lobbies that have lifecycle tied to the host. 
 		The lobby system is also used to determine which labyrinth a player is in, which is important for things like moving enemies and eating food.
 */
 var lobbiesToPlayers = new Map(); // Maps lobby numbers to sets of player socket ids
@@ -1019,7 +1021,7 @@ function addPlayerToLobby(socketId) {
 		var newPlayers = new Set();
 		newPlayers.add(socketId);
 		lobbiesToPlayers.set(newLobby, newPlayers);
-		lobbiesToLabyrinths.set(newLobby, createLobby(newLobby));
+		createLobby(newLobby);
 	}
 	return newLobby;
 }
@@ -1062,7 +1064,7 @@ function createLobby(lobbyId) {
 		for (j = 0; j < COLS; j+=COLS/8) {
 			if (!safeGrid[i][j]) {
 				if ((i - j) % (ROWS/4) == 0) {
-					newGrids = placeItem(i, j, "key", newGrids[0], newGrids[1]);
+					placeItem(i, j, "key", newGrids[0], newGrids[1]);
 				} else {
 					placeItem(i, j, "bomb", newGrids[0], newGrids[1]);
 				}
@@ -1176,6 +1178,8 @@ We keep a map of socket connection to player data. Each value in the map contain
 	- Which maze the player is in, numbered
 */
 var map = new Map();
+const emitInterval = 100, 
+	continuousInterval = 10;
 
 //Handles continuous serverside events, including emitting gameState to clients
 setInterval(function(){
@@ -1189,7 +1193,7 @@ setInterval(function(){
 			io.to(player).emit('gameState', {locations: mapToArray(map), grid: labyrinth[0], food: labyrinth[1], enemies: labyrinth[4], leaderboard: getLeaders(), items: labyrinth[3], safe: labyrinth[2]});
 		}
 	}
-},100);
+},emitInterval);
 
 io.on('connection', function(socket){               //When a connection is made, calls the function which...
 	var lobbyId = null; // Make this globally available in connection scope
@@ -1204,9 +1208,9 @@ io.on('connection', function(socket){               //When a connection is made,
 			data.name = 'noname';
 		}
 		if (!data.color) {
-			data.color = 'Grey'
+			data.color = 'Grey';
 		}
-		spawnLocations = [[3 * (COLS / 4), (ROWS / 4)], 
+		const spawnLocations = [[3 * (COLS / 4), (ROWS / 4)], 
 							[(COLS / 4), (ROWS / 4)], 
 							[(COLS / 4), 3 * (ROWS / 4)], 
 							[3 * (COLS / 4), 3 * (ROWS / 4)]];
@@ -1220,7 +1224,7 @@ io.on('connection', function(socket){               //When a connection is made,
 			if (map.get(socket.id)) {
 				continuous(socket.id);
 			}
-		},10);
+		},continuousInterval);
 	});
 
 	socket.on('W', function() {                      //When socket gets a W event from a client...
