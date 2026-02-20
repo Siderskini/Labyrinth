@@ -27,7 +27,7 @@ const options = fs.existsSync('./key.pem') ?{
 } : null;
 
 // Create a web server. If options is null, creates an http server, otherwise creates an https server with the given options.
-const server = options === null ? http.createServer(app) : https.createServer(options, app);
+const server = options == null ? http.createServer(app) : https.createServer(options, app);
 
 server.listen(config.port, function(){               //Sets up a server connection on the configured port
 	console.log('listening to requests on port ' + config.port);  //When server connection is made, logs this message to console
@@ -1016,7 +1016,7 @@ function addPlayerToLobby(socketId) {
 			break;
 		}
 	}
-	if (newLobby === -1) {
+	if (newLobby == -1) {
 		newLobby = lobbiesToPlayers.size;
 		var newPlayers = new Set();
 		newPlayers.add(socketId);
@@ -1115,7 +1115,7 @@ function continuous(id) {
 	var x = map.get(id)[0],
 		y = map.get(id)[1];
 	var lobbyId = map.get(id)[6];
-	if (lobbyId === null) {
+	if (lobbyId == null) {
 		return;
 	}
 	eatFood(x, y, id, lobbyId);											//Eat food if available
